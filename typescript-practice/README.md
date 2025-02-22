@@ -114,7 +114,7 @@ The project showcases practical applications of TypeScript while delivering esse
 |- tsconfig.json
 ```
 
-## Step by step to run this app in your local
+## Step by step to run this app in your locals
 
 | Command                                                                   | Action                           |
 | ------------------------------------------------------------------------- | -------------------------------- |
