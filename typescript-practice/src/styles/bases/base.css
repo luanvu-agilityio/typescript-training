@@ -1,0 +1,73 @@
+html,
+body {
+  height: 100%;
+  font-family: var(--font-family-primary);
+  font-size: 62.5%;
+}
+
+.wrapper {
+  min-height: 100%;
+  margin: 0 auto;
+}
+
+:root {
+  /* font family */
+  --font-family-primary: 'Montserrat';
+
+  /* font sizes */
+  --font-size-10: 1rem;
+  --font-size-12: 1.2rem;
+  --font-size-14: 1.4rem;
+  --font-size-17: 1.7rem;
+  --font-size-20: 2rem;
+  --font-size-22: 2.2rem;
+  --font-size-32: 3.2rem;
+
+  /* font weights */
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* space */
+  --space-4: 0.4rem;
+  --space-8: 0.8rem;
+  --space-16: 1.6rem;
+  --space-24: 2.4rem;
+  --space-32: 3.2rem;
+  --space-48: 4.8rem;
+  --space-64: 6.4rem;
+  --space-128: 12.8rem;
+
+  /* colors */
+  /* states */
+  --color-success: #4caf50;
+  --color-success-light: #eaf7ea;
+  --color-error: #f44336;
+  --color-error-light: #fde9e8;
+  --color-warning: #ff9800;
+  --color-warning-light: #fff5e6;
+  --color-info: #2196f3;
+  --color-info-light: #e3f2fd;
+
+  /* other colors */
+  --orange-color: #feaf00;
+  --dark-gray-color: #6c6c6c;
+  --black-color: #000000;
+  --white-color: #ffffff;
+  --yellow-color: #f8d442;
+  --gray-color: #acacac;
+  --semi-gray-color: #c4c4c4;
+  --light-gray-color: #cdcdcd;
+  --light-brown-color: #f2eae1;
+  --light-blue-color: #3751ff;
+  --deep-blue-color: #2941e8;
+
+  --input-border-color: #e5e5e5;
+  --button-hover-color: #fe7200;
+
+  /* Box shadow */
+  --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+  /* Border radius */
+  --border-radius: 4px;
+}

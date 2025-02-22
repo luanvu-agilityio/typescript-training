@@ -1,0 +1,121 @@
+/* Layout */
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  min-width: 100%;
+}
+
+/* Main Content */
+.content {
+  flex: 1;
+
+  background-color: #f8f8f8;
+}
+
+.content__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--white-color);
+  padding: 10px 20px;
+  margin-bottom: 20px;
+}
+
+.back-icon img {
+  width: 1.7rem;
+  height: 1.7rem;
+  cursor: pointer;
+}
+
+.back-icon:hover {
+  background-color: var(--orange-color);
+  border-radius: 1rem;
+  color: var(--black-color);
+}
+.content__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.content-actions {
+  display: flex;
+  align-items: center;
+}
+
+.content__search {
+  position: relative;
+  width: 20rem;
+  height: 3.7rem;
+}
+
+.content__search-input {
+  width: 100%;
+  height: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+}
+
+.content__search-input::placeholder {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  color: var(--semi-gray-color);
+}
+
+.content__search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.content__notification {
+  position: relative;
+  margin-left: 15px;
+  cursor: pointer;
+}
+
+.content__notification img {
+  width: 1.7rem;
+  height: 2rem;
+}
+
+/* Sort Button */
+.students__sort-btn img {
+  width: 2.2rem;
+  height: 2.2rem;
+  background-color: var(--white-color);
+}
+
+.students__sort-btn {
+  border: none;
+  background-color: var(--white);
+}
+
+/* Responsive Media Queries */
+
+/* Large tablets and small laptops */
+@media screen and (max-width: 1200px) {
+}
+
+/* Medium tablets */
+@media screen and (max-width: 992px) {
+}
+
+/* Small tablets and large phones */
+@media screen and (max-width: 768px) {
+}
+
+/* Phones */
+@media screen and (max-width: 576px) {
+}
+
+/* Very small phones */
+@media screen and (max-width: 380px) {
+}

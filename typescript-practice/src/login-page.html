@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="description"
+      content="Author: Luan Vu, typescript practice: CRUD operations,
+      Illustrator: design from Figma"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./styles/main.css" />
+    <title>Student management app</title>
+  </head>
+  <body>
+    <div class="auth">
+      <div class="card card--login">
+        <header class="card__header">
+          <h1 class="header__title">crud operations</h1>
+          <h2 class="header__subtitle">sign in</h2>
+          <p class="header__description">Enter your credentials to access your account</p>
+        </header>
+
+        <form class="card__form">
+          <div class="form__group">
+            <label class="form__label" for="email">Email</label>
+            <input class="form__input" type="email" id="email" placeholder="Enter your email" />
+          </div>
+
+          <div class="form__group">
+            <label class="form__label" for="password">Password</label>
+            <input
+              class="form__input"
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <button class="form__submit" type="submit">sign in</button>
+        </form>
+
+        <footer class="card__footer">
+          <p class="footer__text">
+            Forgot your password? <a class="footer__link" href="#">Reset Password</a>
+          </p>
+        </footer>
+      </div>
+    </div>
+    <script type="module" src="./scripts/helpers/login-handler.ts"></script>
+  </body>
+</html>

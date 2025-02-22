@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="description"
+      content="Author: Luan Vu, typescript practice: CRUD operations,
+      Illustrator: design from Figma"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./styles/main.css" />
+    <title>Student management app</title>
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <h1 class="sidebar__title">crud operations</h1>
+        <div class="sidebar__profile">
+          <div class="sidebar__profile-image">
+            <img src="./assets/images/user-images/user-profile.png" alt="Profile" />
+          </div>
+          <h2 class="sidebar__profile-name">Karthi Madesh</h2>
+          <span class="sidebar__profile-role">Admin</span>
+        </div>
+
+        <nav class="sidebar__nav">
+          <a href="javascript:void(0)" class="sidebar__nav-item home">
+            <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/home.svg" />
+            <p class="sidebar__nav-text">Home</p>
+          </a>
+          <a href="javascript:void(0)" class="sidebar__nav-item course">
+            <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/course.svg" />
+            <p class="sidebar__nav-text">Course</p>
+          </a>
+          <a href="javascript:void(0)" class="sidebar__nav-item student">
+            <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/student.svg" />
+            <p class="sidebar__nav-text">Student</p>
+          </a>
+          <a href="javascript:void(0)" class="sidebar__nav-item payment">
+            <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/payment.svg" />
+            <p class="sidebar__nav-text">Payment</p>
+          </a>
+          <a href="javascript:void(0)" class="sidebar__nav-item report">
+            <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/report.svg" />
+            <p class="sidebar__nav-text">Report</p>
+          </a>
+          <a href="javascript:void(0)" class="sidebar__nav-item setting">
+            <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/setting.svg" />
+            <p class="sidebar__nav-text">Setting</p>
+          </a>
+        </nav>
+
+        <div class="sidebar__logout">
+          Logout
+          <img class="sidebar__logout-icon" src="./assets/icons/navbar-icons/logout.svg" />
+        </div>
+      </aside>
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <img src="./assets/icons/navbar-icons/menu.png" alt="Toggle menu" />
+      </button>
+
+      <!-- Main Content -->
+      <main class="content">
+        <header class="content__header">
+          <div class="back-icon">
+            <img src="./assets/icons/topbar-icons/back.svg" alt="Click to get back" />
+          </div>
+          <div class="content-actions">
+            <div class="content__search">
+              <input type="text" class="content__search-input" placeholder="Search..." />
+              <img class="content__search-icon" src="./assets/icons/topbar-icons/search.svg" />
+            </div>
+            <div class="content__notification">
+              <img src="./assets/icons/topbar-icons/notification.svg" alt="Notification" />
+            </div>
+          </div>
+        </header>
+
+        <section class="students">
+          <div class="students__header">
+            <h2 class="students__title">Students List</h2>
+            <div class="students__action">
+              <button class="students__sort-btn">
+                <img src="./assets/icons/topbar-icons/sort.svg" alt="Sort icon" />
+              </button>
+              <button class="students__add-btn">ADD NEW STUDENT</button>
+            </div>
+          </div>
+
+          <table class="students__table">
+            <thead>
+              <tr>
+                <th class="students__table-header"></th>
+                <th class="students__table-header">Name</th>
+                <th class="students__table-header">Email</th>
+                <th class="students__table-header">Phone</th>
+                <th class="students__table-header">Enroll Number</th>
+                <th class="students__table-header">Date of admission</th>
+                <th class="students__table-header"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="students__table-row">
+                <td class="students__table-cell">
+                  <img src="./assets/images/user-images/user-profile.png" alt="Student" />
+                </td>
+                <td class="students__table-cell" data-label="Name">Karthi</td>
+                <td class="students__table-cell" data-label="Email">karthi@gmmail.com</td>
+                <td class="students__table-cell" data-label="Phone Number">7305477760</td>
+                <td class="students__table-cell" data-label="Enroll Number">12345673054777760</td>
+                <td class="students__table-cell" data-label="Date Admission">08-Dec, 2021</td>
+                <td class="students__table-cell">
+                  <div class="students__table-action">
+                    <button class="btn btn--edit">
+                      <img src="./assets/icons/student-list-icons/edit.svg" alt="Edit student" />
+                    </button>
+                    <button class="btn btn--delete">
+                      <img
+                        src="./assets/icons/student-list-icons/delete.svg"
+                        alt="Delete student"
+                      />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="students__table-row">
+                <td class="students__table-cell">
+                  <img src="./assets/images/user-images/user-profile.png" alt="Student" />
+                </td>
+                <td class="students__table-cell" data-label="Name">Karthi</td>
+                <td class="students__table-cell" data-label="Email">karthi@gmmail.com</td>
+                <td class="students__table-cell" data-label="Phone Number">7305477760</td>
+                <td class="students__table-cell" data-label="Enroll Number">12345673054777760</td>
+                <td class="students__table-cell" data-label="Date Admission">08-Dec, 2021</td>
+                <td class="students__table-cell">
+                  <div class="students__table-action">
+                    <button class="btn btn--edit">
+                      <img src="./assets/icons/student-list-icons/edit.svg" alt="Edit student" />
+                    </button>
+                    <button class="btn btn--delete">
+                      <img
+                        src="./assets/icons/student-list-icons/delete.svg"
+                        alt="Delete student"
+                      />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="pagination">
+            <div class="pagination__controls">
+              <div class="pagination__items-per-page">
+                <label class="pagination__label">Show</label>
+                <select class="pagination__select">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
+                </select>
+                <span class="pagination__label">students</span>
+              </div>
+
+              <div class="pagination__navigation">
+                <button
+                  class="pagination__button pagination__button--first"
+                  aria-label="First page"
+                >
+                  <span aria-hidden="true">&laquo;&laquo;</span>
+                </button>
+                <button
+                  class="pagination__button pagination__button--prev"
+                  aria-label="Previous page"
+                >
+                  <span aria-hidden="true">&laquo;</span>
+                </button>
+
+                <div class="pagination__page-indicator">
+                  <span class="pagination__info">Showing 1 to 5 of 10 entries</span>
+                  <!-- Page numbers will be inserted here by JS -->
+                </div>
+
+                <button class="pagination__button pagination__button--next" aria-label="Next page">
+                  <span aria-hidden="true">&raquo;</span>
+                </button>
+                <button class="pagination__button pagination__button--last" aria-label="Last page">
+                  <span aria-hidden="true">&raquo;&raquo;</span>
+                </button>
+              </div>
+
+              <div class="pagination__goto">
+                <label class="pagination__label">Go to page</label>
+                <input type="number" min="1" class="pagination__input" />
+                <button class="pagination__button pagination__button--go">Go</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./scripts/main.ts"></script>
+  </body>
+</html>
