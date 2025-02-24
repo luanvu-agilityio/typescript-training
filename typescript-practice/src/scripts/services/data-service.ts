@@ -11,8 +11,8 @@ interface Environment {
 }
 
 const environment: Environment = {
-  apiUrl: 'http://localhost:3000',
-  useLocal: process.env.USE_LOCAL_STORAGE === 'true',
+  apiUrl: 'https://crud-api-vuea.onrender.com',
+  useLocal: process.env.USE_LOCAL_STORAGE === 'false',
 };
 
 export interface BaseService {
