@@ -14,7 +14,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
-    "outDir": "dist",
+    "outDir": "dest",
     "rootDir": "./src",
 
     /* Type Checking */
