@@ -3,13 +3,14 @@ import { initializeStudentSearch } from '../scripts/helpers/search-handler';
 import { SortField } from './helpers/student-sort';
 import { SortManager } from './controllers/controller';
 import Student from './interfaces/student';
-
+import { DataServiceEnvironment } from './services/data-service';
 /**
  * Main application class responsible for initializing and coordinating the student management system
  */
 export default class App {
   private readonly studentController: StudentController;
   private readonly sortManager: SortManager;
+
   constructor() {
     // Initialize the sort manager with a callback to handle sorted students
     this.sortManager = new SortManager((sortedStudents: Student[]) => {
@@ -18,12 +19,23 @@ export default class App {
     });
 
     // Initialize the controller with bound handler methods
-    this.studentController = new StudentController({
-      handleDelete: this.handleDelete.bind(this),
-      handleEdit: this.handleEdit.bind(this),
-      handleAddNew: this.handleAddNew.bind(this),
-      handleSortButtonClick: this.handleSortButtonClick.bind(this),
-      handleSortFieldChange: this.handleSortFieldChange.bind(this),
+    const dataService = DataServiceEnvironment.create();
+    this.studentController = new StudentController(dataService, {
+      handleDelete: (id) => {
+        /* ... */
+      },
+      handleEdit: (id) => {
+        /* ... */
+      },
+      handleAddNew: () => {
+        /* ... */
+      },
+      handleSortButtonClick: () => {
+        /* ... */
+      },
+      handleSortFieldChange: (field) => {
+        /* ... */
+      },
     });
   }
 

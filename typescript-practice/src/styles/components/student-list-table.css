@@ -101,11 +101,18 @@
   border-radius: 1rem;
 }
 
-.btn--edit,
-.btn--delete {
+.btn.btn--edit,
+.btn.btn--delete {
+  padding: 0;
   border: none;
   cursor: pointer;
   background-color: var(--white-color);
+}
+
+.btn--edit img,
+.btn--delete img {
+  width: 2rem;
+  height: 2rem;
 }
 
 .students__table-action {

@@ -15,9 +15,7 @@ export class StudentListView {
   private tableBody: HTMLElement;
   private addButton: HTMLElement | null;
   private sortButton: HTMLElement | null;
-
   private headerCells: NodeListOf<HTMLElement>;
-
   private static readonly FIELD_MAP: Record<number, SortField> = {
     1: 'name',
     2: 'email',
@@ -136,12 +134,6 @@ export class StudentListView {
       sortImg.alt = order === 'asc' ? 'Sort ascending' : 'Sort descending';
     }
   }
-
-  /**
-   * Renders the list of students in the table body.
-   * @param students - An array of students to render.
-   *  @param preservePage - Whether to preserve current page after update (default: false)
-   */
 
   /**
    * Renders the current page of students to the table

@@ -1,8 +1,14 @@
 import { ToastHandler } from './toast-handler';
 
+/**
+ * LogoutHandler class handles the logout process, including showing confirmation dialogs and redirecting to the login page.
+ */
 export class LogoutHandler {
   private static readonly REDIRECT_DELAY = 2000;
 
+  /**
+   * Handles the logout button click event by showing a confirmation dialog.
+   */
   private static handleLogoutClick() {
     //Show confirmation toast
     ToastHandler.showConfirmation(
@@ -19,6 +25,9 @@ export class LogoutHandler {
     );
   }
 
+  /**
+   * Performs the logout process by showing a success message and redirecting to the login page after a delay.
+   */
   private static performLogout() {
     // Show toast successful message
     ToastHandler.show('success', 'Success', 'Logging out...');
@@ -29,6 +38,9 @@ export class LogoutHandler {
     }, this.REDIRECT_DELAY);
   }
 
+  /**
+   * Initializes the LogoutHandler by attaching the click event listener to the logout button.
+   */
   public static initialize() {
     const logoutButton = document.querySelector('.sidebar__logout') as HTMLElement;
 

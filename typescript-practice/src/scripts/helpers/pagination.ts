@@ -1,5 +1,10 @@
 import { ToastHandler } from './toast-handler';
 
+/**
+ * Pagination class manages pagination for a list of items on a web page.
+ * It provides methods to navigate through pages, update the UI, and handle user interactions.
+ */
+
 export class Pagination {
   private element: HTMLElement;
   private itemsPerPageSelect: HTMLSelectElement;
@@ -16,7 +21,12 @@ export class Pagination {
   private itemsPerPage: number = 5;
   private currentPage: number = 1;
   private totalPages: number = 1;
-  private callback: (page: number, itemsPerPage: number) => void;
+
+  /**
+   * Initializes the Pagination instance with the container selector and callback function.
+   * @param containerSelector - The CSS selector for the pagination container element.
+   * @param callback - The callback function to be called when the page or items per page changes.
+   */ private callback: (page: number, itemsPerPage: number) => void;
 
   constructor(containerSelector: string, callback: (page: number, itemsPerPage: number) => void) {
     this.element = document.querySelector(containerSelector) as HTMLElement;
@@ -48,6 +58,9 @@ export class Pagination {
     this.bindEvents();
   }
 
+  /**
+   * Binds event listeners to the pagination controls.
+   */
   private bindEvents(): void {
     this.itemsPerPageSelect.addEventListener('change', () => {
       this.itemsPerPage = parseInt(this.itemsPerPageSelect.value);
@@ -107,12 +120,19 @@ export class Pagination {
     });
   }
 
+  /**
+   * Updates the total number of items and recalculates the total pages.
+   * @param totalItems - The total number of items.
+   */
   public updateTotalItems(totalItems: number): void {
     this.totalItems = totalItems;
     this.calculateTotalPages();
     this.updateUI();
   }
 
+  /**
+   * Calculates the total number of pages based on the total items and items per page.
+   */
   private calculateTotalPages(): void {
     this.totalPages = Math.max(1, Math.ceil(this.totalItems / this.itemsPerPage));
     if (this.currentPage > this.totalPages) {
@@ -120,6 +140,9 @@ export class Pagination {
     }
   }
 
+  /**
+   * Updates the state of the pagination controls and displays the current range of items.
+   */
   private updateUI(): void {
     //update buttons state
     this.firstBtn.disabled = this.currentPage === 1;
@@ -139,11 +162,14 @@ export class Pagination {
     this.renderPageNumbers();
   }
 
+  /**
+   * Renders the page numbers with ellipses for large ranges.
+   */
   private renderPageNumbers(): void {
     this.pageNumbersContainer.innerHTML = '';
 
     //Displaying page numbers with ellipses
-    const maxPagesToShow = 5;
+    const maxPagesToShow = 3;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
     let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
 
@@ -176,6 +202,10 @@ export class Pagination {
     }
   }
 
+  /**
+   * Adds a page number button to the page numbers container.
+   * @param pageNum - The page number to add.
+   */
   private addPageNumber(pageNum: number): void {
     const pageButton = document.createElement('button');
     pageButton.className = `pagination__button pagination__button--number ${
@@ -192,6 +222,9 @@ export class Pagination {
     this.pageNumbersContainer.appendChild(pageButton);
   }
 
+  /**
+   * Adds an ellipsis to the page numbers container.
+   */
   private addEllipsis(): void {
     const ellipsis = document.createElement('span');
     ellipsis.className = 'pagination__ellipsis';
@@ -199,6 +232,9 @@ export class Pagination {
     this.pageNumbersContainer.appendChild(ellipsis);
   }
 
+  /**
+   * Calls the callback function with the current page and items per page.
+   */
   private triggerCallback(): void {
     this.callback(this.currentPage, this.itemsPerPage);
   }
