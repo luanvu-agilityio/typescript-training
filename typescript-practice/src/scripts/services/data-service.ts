@@ -13,7 +13,7 @@ interface Environment {
 const environment: Environment = {
   apiUrl:
     process.env.NODE_ENV === 'production'
-      ? 'https://your-render-app-name.onrender.com'
+      ? 'https://typescript-training-1.onrender.com'
       : 'http://localhost:3000',
   useLocal: process.env.USE_LOCAL_STORAGE === 'true',
 };
