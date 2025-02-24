@@ -3,5 +3,10 @@
   "resolvers": [
     "@parcel/resolver-glob",
     "..."
-  ]
+  ],
+  "transformers": {
+    "*.{ts,tsx}": [
+      "@parcel/transformer-typescript-tsc"
+    ]
+  }
 }
