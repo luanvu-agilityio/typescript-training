@@ -21,10 +21,15 @@ const environment: Environment = {
 };
 
 const normalizeAvatarUrl = (avatar: string): string => {
+const normalizeAvatarUrl = (avatar: string): string => {
   if (!avatar) return '';
-  const parts = avatar.split('/');
-  const fileName = parts[parts.length - 1].split('?')[0];
-  return `${environment.baseImageUrl}/${fileName}`;
+  
+  // If it's already an absolute URL, return it as is
+  if (avatar.startsWith('http')) return avatar;
+  
+  const cleanPath = avatar.startsWith('/') ? avatar.substring(1) : avatar;
+  
+  return `${environment.baseImageUrl}/${cleanPath}`;
 };
 
 export interface BaseService {
