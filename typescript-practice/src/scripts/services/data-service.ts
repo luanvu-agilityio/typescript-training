@@ -20,7 +20,7 @@ const environment: Environment = {
       : 'http://localhost:1234',
 };
 
-const normalizeAvatarUrl = (avatar: string): string => {
+
 const normalizeAvatarUrl = (avatar: string): string => {
   if (!avatar) return '';
   
