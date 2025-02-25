@@ -34,7 +34,7 @@ export class LogoutHandler {
 
     // Make some delay
     setTimeout(() => {
-      window.location.href = 'login-page.html';
+      window.location.href = '/login-page.html';
     }, this.REDIRECT_DELAY);
   }
 
