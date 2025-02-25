@@ -16,8 +16,8 @@ const environment: Environment = {
   useLocalStorage: process.env.USE_LOCAL_STORAGE === 'true',
   baseImageUrl:
     process.env.USE_LOCAL_STORAGE === 'true'
-     ? 'http://localhost:1234',
-      : 'https://crud-api-vuea.onrender.com'
+     ? 'http://localhost:1234'
+      : 'https://crud-api-vuea.onrender.com',
      
 };
 
