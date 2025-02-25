@@ -7,17 +7,18 @@ import Student from '../interfaces/student';
 
 interface Environment {
   apiUrl: string;
-  useLocal: boolean;
+  useLocalStorage: boolean;
   baseImageUrl: string;
 }
 
 const environment: Environment = {
   apiUrl: 'https://crud-api-vuea.onrender.com',
-  useLocal: process.env.USE_LOCAL_STORAGE !== 'false',
+  useLocalStorage: process.env.USE_LOCAL_STORAGE === 'true',
   baseImageUrl:
-    process.env.USE_LOCAL_STORAGE === 'false'
-      ? 'https://crud-api-vuea.onrender.com'
-      : 'http://localhost:1234',
+    process.env.USE_LOCAL_STORAGE === 'true'
+     ? 'http://localhost:1234',
+      : 'https://crud-api-vuea.onrender.com'
+     
 };
 
 
@@ -216,7 +217,7 @@ class ApiDataService implements BaseService {
 
 export class DataServiceEnvironment {
   static create(): BaseService {
-    return environment.useLocal
+    return environment.useLocalStorage
       ? new LocalStorageService()
       : new ApiDataService(environment.apiUrl);
   }
