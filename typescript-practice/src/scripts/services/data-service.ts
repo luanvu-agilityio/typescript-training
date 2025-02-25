@@ -13,7 +13,7 @@ interface Environment {
 
 const environment: Environment = {
   apiUrl: 'https://crud-api-vuea.onrender.com',
-  useLocal: process.env.USE_LOCAL_STORAGE === 'false',
+  useLocal: process.env.USE_LOCAL_STORAGE !== 'false',
   baseImageUrl:
     process.env.USE_LOCAL_STORAGE === 'false'
       ? 'https://crud-api-vuea.onrender.com'
