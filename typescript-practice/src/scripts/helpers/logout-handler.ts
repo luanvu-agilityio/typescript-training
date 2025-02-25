@@ -29,12 +29,16 @@ export class LogoutHandler {
    * Performs the logout process by showing a success message and redirecting to the login page after a delay.
    */
   private static performLogout() {
+    // Clear authentication data from localStorage
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+
     // Show toast successful message
     ToastHandler.show('success', 'Success', 'Logging out...');
 
     // Make some delay
     setTimeout(() => {
-      window.location.href = 'login-page.html';
+      window.location.href = './login-page.html';
     }, this.REDIRECT_DELAY);
   }
 

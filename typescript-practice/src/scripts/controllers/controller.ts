@@ -1,6 +1,6 @@
 import Student from '../interfaces/student';
 import StudentModel from '../models/model';
-
+import { SortDropdownHandler } from '../helpers/sort-dropdown-handler';
 import { StudentFormView } from '../views/form-view';
 import { StudentListView } from '../views/student-list-view';
 import { ToastHandler } from '../helpers/toast-handler';
@@ -173,24 +173,42 @@ export class SortManager {
    * @param field - The new sort field.
    */
   public handleSortFieldChange(field: SortField): void {
-    if (!this.currentSort) {
-      this.currentSort = { field, order: 'asc' };
-    } else {
+    if (this.currentSort.field !== field) {
       this.currentSort.field = field;
+      this.onSort(this.sortStudents(this.allStudents));
     }
-    this.onSort(this.sortStudents(this.allStudents));
   }
 
   /**
    * Handles sort button click event.
    */
   public handleSortButtonClick(): void {
-    if (!this.currentSort) {
-      this.currentSort = { field: 'name', order: 'asc' };
-    } else {
-      this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
-    }
+    this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
     this.onSort(this.sortStudents(this.allStudents));
+  }
+
+  /**
+   * Sets the sort order directly.
+   * @param order - The sort order to set
+   */
+
+  public setSortOrder(order: SortOrder): void {
+    if (this.currentSort.order !== order) {
+      this.currentSort.order = order;
+      this.onSort(this.sortStudents(this.allStudents));
+    }
+  }
+
+  /**
+   * Sets the complete sort configuration.
+   * @param config - The sort configuration to set
+   */
+
+  public setSortConfig(config: SortConfig): void {
+    if (this.currentSort.field !== config.field && this.currentSort.order !== config.order) {
+      this.currentSort = { ...config };
+      this.onSort(this.sortStudents(this.allStudents));
+    }
   }
 
   /**
@@ -254,10 +272,9 @@ export class StudentController extends BaseController {
   private readonly paginationManager: PaginationManager;
   private readonly sortManager: SortManager;
   private readonly searchManager: SearchManager;
-
   private readonly listView: StudentListView;
   private readonly formView: StudentFormView;
-
+  private sortDropdownHandler: SortDropdownHandler;
   constructor(
     dataService: BaseService,
     handlers: {
@@ -282,11 +299,19 @@ export class StudentController extends BaseController {
       this.handleDelete.bind(this),
       this.handleEdit.bind(this),
       this.handleAddNew.bind(this),
-      () => this.sortManager.handleSortButtonClick(),
-      (field: SortField) => this.sortManager.handleSortFieldChange(field),
     );
 
     this.formView = new StudentFormView(this.handleSave.bind(this), this.handleCancel.bind(this));
+
+    this.sortDropdownHandler = new SortDropdownHandler((field: SortField, order: SortOrder) => {
+      // Update sort manager with the new field and order
+      if (field !== this.sortManager.getCurrentSort().field) {
+        this.sortManager.handleSortFieldChange(field);
+      }
+      if (order !== this.sortManager.getCurrentSort().order) {
+        this.sortManager.handleSortButtonClick();
+      }
+    }, this.sortManager.getCurrentSort());
   }
 
   /**
@@ -351,7 +376,8 @@ export class StudentController extends BaseController {
       // Update pagination with new dataset
       this.paginationManager.updateData(this.allStudents);
       // Update sort UI
-      this.listView.updateSortUI(this.sortManager.getCurrentSort());
+
+      this.sortDropdownHandler.updateSortUI(this.sortManager.getCurrentSort());
     } catch (error) {
       this.handleError(error);
     }

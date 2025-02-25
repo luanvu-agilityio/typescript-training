@@ -25,11 +25,11 @@
         </div>
 
         <nav class="sidebar__nav">
-          <a href="javascript:void(0)" class="sidebar__nav-item home">
+          <a href="javascript:void(0)" class="sidebar__nav-item home disabled">
             <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/home.svg" />
             <p class="sidebar__nav-text">Home</p>
           </a>
-          <a href="javascript:void(0)" class="sidebar__nav-item course">
+          <a href="javascript:void(0)" class="sidebar__nav-item course disabled">
             <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/course.svg" />
             <p class="sidebar__nav-text">Course</p>
           </a>
@@ -37,15 +37,15 @@
             <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/student.svg" />
             <p class="sidebar__nav-text">Student</p>
           </a>
-          <a href="javascript:void(0)" class="sidebar__nav-item payment">
+          <a href="javascript:void(0)" class="sidebar__nav-item payment disabled">
             <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/payment.svg" />
             <p class="sidebar__nav-text">Payment</p>
           </a>
-          <a href="javascript:void(0)" class="sidebar__nav-item report">
+          <a href="javascript:void(0)" class="sidebar__nav-item report disabled">
             <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/report.svg" />
             <p class="sidebar__nav-text">Report</p>
           </a>
-          <a href="javascript:void(0)" class="sidebar__nav-item setting">
+          <a href="javascript:void(0)" class="sidebar__nav-item setting disabled">
             <img class="sidebar__nav-icon" src="./assets/icons/navbar-icons/setting.svg" />
             <p class="sidebar__nav-text">Setting</p>
           </a>
@@ -81,9 +81,41 @@
           <div class="students__header">
             <h2 class="students__title">Students List</h2>
             <div class="students__action">
-              <button class="students__sort-btn">
-                <img src="./assets/icons/topbar-icons/sort.svg" alt="Sort icon" />
-              </button>
+              <div class="sort-dropdown">
+                <button id="sortByButton" class="sort-dropdown__button">
+                  Sort by <span class="arrow-down">▼</span>
+                </button>
+                <div id="sortDropdownMenu" class="sort-dropdown__menu hidden">
+                  <div class="sort-dropdown__item" data-field="name" data-order="asc">Name A-Z</div>
+                  <div class="sort-dropdown__item" data-field="name" data-order="desc">
+                    Name Z-A
+                  </div>
+                  <div class="sort-dropdown__item" data-field="dateAdmission" data-order="asc">
+                    Due Dates closest to now
+                  </div>
+                  <div class="sort-dropdown__item" data-field="dateAdmission" data-order="desc">
+                    Due Dates farthest from now
+                  </div>
+                  <div class="sort-dropdown__item" data-field="email" data-order="asc">
+                    Email A-Z
+                  </div>
+                  <div class="sort-dropdown__item" data-field="email" data-order="desc">
+                    Email Z-A
+                  </div>
+                  <div class="sort-dropdown__item" data-field="enrollNum" data-order="asc">
+                    Enroll Number low to high
+                  </div>
+                  <div class="sort-dropdown__item" data-field="enrollNum" data-order="desc">
+                    Enroll Number high to low
+                  </div>
+                  <div class="sort-dropdown__item" data-field="phoneNum" data-order="asc">
+                    Phone Number low to high
+                  </div>
+                  <div class="sort-dropdown__item" data-field="phoneNum" data-order="desc">
+                    Phone Number high to low
+                  </div>
+                </div>
+              </div>
               <button class="students__add-btn">ADD NEW STUDENT</button>
             </div>
           </div>
@@ -177,6 +209,7 @@
         </section>
       </main>
     </div>
+
     <script type="module" src="./scripts/main.ts"></script>
   </body>
 </html>

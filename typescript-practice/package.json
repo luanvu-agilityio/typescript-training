@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "source": [
-    "src/index.html"
+    "src/login-page.html"
   ],
   "scripts": {
     "lint": "eslint . --ext .ts",
     "tsc": "tsc",
     "start": "parcel",
-    "build": "parcel build",
+    "build": "parcel build --public-url ./login-page.html",
     "server": "json-server --watch src/database/db.json",
     "dev": "concurrently \"npm run start\" \"npm run server\""
   },
@@ -19,7 +19,6 @@
   "description": "",
   "devDependencies": {
     "@parcel/resolver-glob": "^2.13.3",
-    "@parcel/transformer-typescript-tsc": "^2.13.3",
     "@types/node": "^22.13.5",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",

@@ -1,6 +1,7 @@
 import { formatDate, parseDate } from '../helpers/date-formatter';
 import Student from '../interfaces/student';
 import { studentFormTemplate } from '../templates/student-form';
+import { Validator } from '../helpers/form-validation';
 // @ts-expect-error
 import defaultAvatar from '../../assets/images/user-images/user-profile.png';
 
@@ -59,6 +60,7 @@ export class StudentFormView {
     });
 
     this.attachFormEventListeners();
+    this.attachValidationListeners();
   }
 
   /**
@@ -116,6 +118,143 @@ export class StudentFormView {
   }
 
   /**
+   * Attaches input event listeners for real-time validation
+   */
+  private attachValidationListeners(): void {
+    const inputs = this.formContainer.querySelectorAll('input');
+
+    inputs.forEach((input) => {
+      // Skip file input
+      if (input.type === 'file') return;
+
+      let timeoutId: number;
+
+      // Replace 'input' event with 'keyup' for typing detection
+      input.addEventListener('keyup', (e) => {
+        const target = e.target as HTMLInputElement;
+
+        // Clear previous timeout
+        clearTimeout(timeoutId);
+
+        // Set new timeout (debounce)
+        timeoutId = window.setTimeout(() => {
+          this.validateSingleInput(target);
+        }, 2000); // 2 seconds delay
+      });
+
+      // Also validate on blur for immediate feedback
+      input.addEventListener('blur', (e) => {
+        const target = e.target as HTMLInputElement;
+        this.validateSingleInput(target);
+      });
+
+      // Special handling for date input (calendar)
+      if (input.id === 'admission') {
+        input.addEventListener('change', (e) => {
+          const target = e.target as HTMLInputElement;
+          this.validateSingleInput(target);
+        });
+      }
+    });
+  }
+
+  /**
+   * Validates a single input and updates error state
+   */
+  private validateSingleInput(input: HTMLInputElement): void {
+    const value = input.value;
+    const id = input.id;
+
+    // Map input IDs to student properties
+    const fieldMap: Record<string, string> = {
+      name: 'name',
+      email: 'email',
+      phone: 'phoneNum',
+      enroll: 'enrollNum',
+      admission: 'dateAdmission',
+    };
+
+    const field = fieldMap[id];
+    if (!field) return;
+
+    // Create partial student object with just this field
+    const partialStudent: Partial<Student> = {};
+    partialStudent[field as keyof Student] = value;
+
+    // Use existing validator but only for this specific field
+    const { errors } = Validator.validateForm(partialStudent);
+
+    if (!errors[field]) {
+      // Field is valid, clear error for this field only
+      this.clearFieldError(field);
+    } else {
+      // Field is invalid, update only this field's error
+      this.updateSingleFieldError(field, errors[field]);
+    }
+  }
+
+  /**
+   * Updates error for a specific field without affecting other fields
+   */
+  private updateSingleFieldError(field: string, errorMessage: string): void {
+    const errorEl = this.formErrorElements[field];
+    if (errorEl) {
+      errorEl.textContent = errorMessage;
+      errorEl.style.display = 'block';
+    }
+
+    // Find and highlight the corresponding input
+    let inputSelector = `#${field}`;
+    // Map field names to input IDs
+    if (field === 'phoneNum') inputSelector = '#phone';
+    if (field === 'dateAdmission') inputSelector = '#admission';
+    if (field === 'enrollNum') inputSelector = '#enroll';
+
+    const input = this.formContainer.querySelector(inputSelector) as HTMLInputElement;
+    if (input) {
+      input.classList.add('is-invalid');
+
+      // Special handling for date field
+      if (field === 'dateAdmission' || inputSelector === '#admission') {
+        const calendarContainer = this.formContainer.querySelector('.calendar-input');
+        if (calendarContainer) {
+          calendarContainer.classList.add('is-invalid');
+        }
+      }
+    }
+  }
+  /**
+   * Clears error for a specific field
+   */
+  private clearFieldError(field: string): void {
+    const errorEl = this.formErrorElements[field];
+    if (errorEl) {
+      errorEl.textContent = '';
+      errorEl.style.display = 'none';
+    }
+
+    // Find input and remove error class
+    let inputSelector = `#${field}`;
+    // Map field names to input IDs
+    if (field === 'phoneNum') inputSelector = '#phone';
+    if (field === 'dateAdmission') inputSelector = '#admission';
+    if (field === 'enrollNum') inputSelector = '#enroll';
+
+    const input = this.formContainer.querySelector(inputSelector) as HTMLInputElement;
+    if (input) {
+      input.classList.remove('is-invalid');
+
+      // Special handling for date field
+      if (field === 'dateAdmission') {
+        const calendarContainer = this.formContainer.querySelector('.calendar-input');
+        if (calendarContainer) {
+          calendarContainer.classList.remove('is-invalid');
+        }
+      }
+    }
+  }
+
+  /**
    *  Collects and format form input values
    * @return {Partial<Student>} collect form data as a partial  student object
    */
@@ -163,7 +302,7 @@ export class StudentFormView {
    * @param {errors: Record<string, string>} errors - object containing field name and error messages
    */
   showErrors(errors: Record<string, string>): void {
-    // Clear previous errors
+    // Clear all previous errors first
     Object.values(this.formErrorElements).forEach((el) => {
       el.textContent = '';
       el.style.display = 'none';
@@ -175,6 +314,12 @@ export class StudentFormView {
       input.classList.remove('is-invalid');
     });
 
+    // Also reset calendar container if it exists
+    const calendarContainer = this.formContainer.querySelector('.calendar-input');
+    if (calendarContainer) {
+      calendarContainer.classList.remove('is-invalid');
+    }
+
     // Display new errors
     Object.entries(errors).forEach(([field, message]) => {
       const errorEl = this.formErrorElements[field];
@@ -184,15 +329,17 @@ export class StudentFormView {
 
         // Find and highlight the corresponding input
         let inputSelector = `#${field}`;
-        // Special case for phoneNum field since the input id is 'phone'
+        // Map field names to input IDs
         if (field === 'phoneNum') inputSelector = '#phone';
-        // Special case for dateAdmission field since the input id is 'admission'
         if (field === 'dateAdmission') inputSelector = '#admission';
         if (field === 'enrollNum') inputSelector = '#enroll';
+
         const input = this.formContainer.querySelector(inputSelector) as HTMLInputElement;
         if (input) {
           input.classList.add('is-invalid');
-          if (field === 'dateAdmission') {
+
+          // Special handling for date field
+          if (field === 'dateAdmission' || inputSelector === '#admission') {
             const calendarContainer = this.formContainer.querySelector('.calendar-input');
             if (calendarContainer) {
               calendarContainer.classList.add('is-invalid');

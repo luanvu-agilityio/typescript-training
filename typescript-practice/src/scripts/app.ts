@@ -3,12 +3,13 @@ import { initializeStudentSearch } from '../scripts/helpers/search-handler';
 import { SortField } from './helpers/student-sort';
 import { SortManager } from './controllers/controller';
 import Student from './interfaces/student';
-import { DataServiceEnvironment } from './services/data-service';
+import { DataServiceEnvironment } from '../scripts/services/data-service';
+
 /**
  * Main application class responsible for initializing and coordinating the student management system
  */
 export default class App {
-  private readonly studentController: StudentController;
+  private studentController!: StudentController;
   private readonly sortManager: SortManager;
 
   constructor() {
@@ -17,26 +18,19 @@ export default class App {
       // Update the displayed students when sorting occurs
       this.studentController.updateDisplayedStudents(sortedStudents);
     });
+    this.checkAuth();
+  }
 
-    // Initialize the controller with bound handler methods
-    const dataService = DataServiceEnvironment.create();
-    this.studentController = new StudentController(dataService, {
-      handleDelete: (id) => {
-        /* ... */
-      },
-      handleEdit: (id) => {
-        /* ... */
-      },
-      handleAddNew: () => {
-        /* ... */
-      },
-      handleSortButtonClick: () => {
-        /* ... */
-      },
-      handleSortFieldChange: (field) => {
-        /* ... */
-      },
-    });
+  checkAuth() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const currentPath = window.location.pathname;
+    const isLoginPage = currentPath.includes('login-page.html');
+
+    // Force redirection if needed
+    if (!isLoggedIn && !isLoginPage) {
+      window.location.replace('./login-page.html');
+      throw new Error('Authentication required');
+    }
   }
 
   /**
@@ -44,6 +38,18 @@ export default class App {
    */
   public async init(): Promise<void> {
     try {
+      // Get the data service first
+      const dataService = await DataServiceEnvironment.create();
+
+      // Initialize the controller with the data service and bound handler methods
+      this.studentController = new StudentController(dataService, {
+        handleDelete: (id) => this.handleDelete(id),
+        handleEdit: (id) => this.handleEdit(id),
+        handleAddNew: () => this.handleAddNew(),
+        handleSortButtonClick: () => this.handleSortButtonClick(),
+        handleSortFieldChange: (field) => this.handleSortFieldChange(field),
+      });
+
       await this.initializeCore();
       await this.initializeFeatures();
     } catch (error) {
