@@ -342,21 +342,33 @@ export class StudentController extends BaseController {
    * Handles search event.
    * @param students - The filtered array of students.
    */
-  private handleSearch(students: Student[]): void {
+   private handleSearch(students: Student[]): void {
+    // Update the allStudents array with the filtered results
     this.allStudents = students;
-    this.renderStudents();
+
+    // Apply current sort to maintain consistency
+    const sortedStudents = this.sortManager.sortStudents(this.allStudents);
+
+    // Update pagination with the new dataset (this will trigger UI update)
+    this.paginationManager.updateData(sortedStudents);
   }
 
   /**
    * Handles search query input.
    * @param query - The search query.
    */
-  public async handleSearchingQuery(query: string): Promise<void> {
+ public async handleSearchingQuery(query: string): Promise<void> {
     try {
-      const allStudents = await this.getAllStudents();
-      this.searchManager.searchStudents(query, allStudents);
+      this.loadingSpinner.show();
+      // Use the cached allStudents if available, otherwise fetch them
+      const students = this.allStudents.length > 0 ? this.allStudents : await this.getAllStudents();
+
+      // Apply search filtering
+      this.searchManager.searchStudents(query, students);
     } catch (error) {
       this.handleError(error);
+    } finally {
+      this.loadingSpinner.hide();
     }
   }
 
