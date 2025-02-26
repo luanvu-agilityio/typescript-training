@@ -17,4 +17,8 @@ export const ERROR_MESSAGES = {
   },
   AGE: 'Student must be at least 16 years old',
   ADDRESS_LENGTH: 'Address must be at least 10 characters long',
+  DUPLICATE: {
+    EMAIL: 'This email is already registered in the system',
+    ENROLL_NUM: 'This enrollment number is already in use',
+  },
 };

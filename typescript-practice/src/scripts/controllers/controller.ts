@@ -258,12 +258,15 @@ export class SearchManager {
  */
 export class StudentController extends BaseController {
   private allStudents: Student[] = [];
+  // Core properties
   private readonly dataService: BaseService;
+  private readonly listView: StudentListView;
+  private readonly formView: StudentFormView;
+
+  // Manager classes
   private readonly paginationManager: PaginationManager;
   private readonly sortManager: SortManager;
   private readonly searchManager: SearchManager;
-  private readonly listView: StudentListView;
-  private readonly formView: StudentFormView;
   private sortDropdownHandler: SortDropdownHandler;
   constructor(
     dataService: BaseService,
@@ -276,15 +279,14 @@ export class StudentController extends BaseController {
     },
   ) {
     super();
-
     this.dataService = dataService;
 
-    // Initialize managers
+    // Initialize managers with their callback functions
     this.paginationManager = new PaginationManager(this.updateDisplayedStudents.bind(this));
     this.sortManager = new SortManager(this.handleSort.bind(this));
     this.searchManager = new SearchManager(this.handleSearch.bind(this));
 
-    // Initialize views
+    // Initialize views with their event handlers
     this.listView = new StudentListView(
       this.handleDelete.bind(this),
       this.handleEdit.bind(this),
@@ -293,8 +295,13 @@ export class StudentController extends BaseController {
       (field: SortField) => this.sortManager.handleSortFieldChange(field),
     );
 
-    this.formView = new StudentFormView(this.handleSave.bind(this), this.handleCancel.bind(this));
+    this.formView = new StudentFormView(
+      this.handleSave.bind(this),
+      this.handleCancel.bind(this),
+      async () => await this.getAllStudents(),
+    );
 
+    // Initialize sort dropdown handler
     this.sortDropdownHandler = new SortDropdownHandler((field: SortField, order: SortOrder) => {
       // Update sort manager with the new field and order
       if (field !== this.sortManager.getCurrentSort().field) {
@@ -305,6 +312,11 @@ export class StudentController extends BaseController {
       }
     }, this.sortManager.getCurrentSort());
   }
+
+  /**---------------------
+   * PUBLIC METHODS
+   * ---------------------
+   */
 
   /**
    * Loads the initial list of students and renders them in the list view.
@@ -321,6 +333,109 @@ export class StudentController extends BaseController {
     }
   }
 
+  /**
+   * Handles search query input.
+   * @param query - The search query.
+   */
+  public async handleSearchingQuery(query: string): Promise<void> {
+    try {
+      const allStudents = await this.getAllStudents();
+      this.searchManager.searchStudents(query, allStudents);
+    } catch (error) {
+      this.handleError(error);
+    } finally {
+      this.loadingSpinner.hide();
+    }
+  }
+
+  /**
+   * Updates the displayed students in the list view.
+   * @param students - The array of students to display.
+   */
+  public updateDisplayedStudents(students: Student[]): void {
+    this.listView.renderStudentTable(students);
+  }
+
+  /**
+   * Handles action of adding new student by showing add student form
+   */
+  public handleAddNew(): void {
+    try {
+      this.formView.showAddForm();
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /**
+   *  Handles action of editing student by showing edit student form
+   * @param id - id of student to edit
+   */
+  public async handleEdit(id: string): Promise<void> {
+    try {
+      const student = await this.getStudentById(id);
+      if (!student) {
+        throw new StudentNotFoundError(id);
+      }
+      this.formView.showEditForm(student);
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /**
+   * Handles action of deleting a student by showing the confirmation dialog
+   * @param id - the id of student to delete
+   */
+  public handleDelete(id: string): void {
+    try {
+      ToastHandler.showConfirmation(
+        'Confirm Deletion',
+        'Are you sure you want to delete this student?',
+        async () => {
+          try {
+            this.loadingSpinner.show();
+            await this.deleteStudent(id);
+
+            await this.renderStudents(true);
+
+            ToastHandler.show('success', 'Success', 'Student deleted successfully');
+          } catch (error) {
+            this.handleError(error);
+          } finally {
+            this.loadingSpinner.hide();
+          }
+        },
+        () => {},
+      );
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Add a getter for the list view
+  public getListView(): StudentListView {
+    return this.listView;
+  }
+
+  /**
+   * Sidebar toggle function
+   */
+  public initializeSidebarToggle(): void {
+    const sidebarToggleButton = document.querySelector('#sidebarToggle');
+    const sidebar = document.querySelector('.sidebar') as HTMLElement;
+
+    if (sidebarToggleButton && sidebar) {
+      sidebarToggleButton.addEventListener('click', (e) => {
+        sidebar.classList.toggle('expanded');
+      });
+    }
+  }
+
+  /**--------------------------------
+   * PRIVATE METHODS
+   * ----------------------------------
+   */
   /**
    * Handles sort event.
    * @param students - The sorted array of students.
@@ -340,21 +455,6 @@ export class StudentController extends BaseController {
 
     // Update pagination with the new dataset (this will trigger UI update)
     this.paginationManager.updateData(this.allStudents);
-  }
-
-  /**
-   * Handles search query input.
-   * @param query - The search query.
-   */
-  public async handleSearchingQuery(query: string): Promise<void> {
-    try {
-      const allStudents = await this.getAllStudents();
-      this.searchManager.searchStudents(query, allStudents);
-    } catch (error) {
-      this.handleError(error);
-    } finally {
-      this.loadingSpinner.hide();
-    }
   }
 
   /**
@@ -385,22 +485,14 @@ export class StudentController extends BaseController {
   }
 
   /**
-   * Updates the displayed students in the list view.
-   * @param students - The array of students to display.
-   */
-  public updateDisplayedStudents(students: Student[]): void {
-    this.listView.renderStudentTable(students);
-  }
-
-  /**
    * Handles the save action for adding or updating a student.
    * @param studentData - The data of the student to save.
    */
   private async handleSave(studentData: Partial<Student>): Promise<void> {
     try {
       this.loadingSpinner.show();
-
-      const { isValid, errors } = Validator.validateForm(studentData);
+      const allStudents = await this.getAllStudents();
+      const { isValid, errors } = Validator.validateForm(studentData, allStudents);
       if (!isValid) {
         throw new ValidationError(errors);
       }
@@ -476,6 +568,10 @@ export class StudentController extends BaseController {
     }
   }
 
+  /**---------------------------
+   * DATA ACCESS METHODS
+   * -----------------------------
+   */
   /**
    * Retrieves all students from storage.
    * @returns An array of students.
@@ -506,63 +602,6 @@ export class StudentController extends BaseController {
   }
 
   /**
-   * Handles action of adding new student by showing add student form
-   */
-  handleAddNew(): void {
-    try {
-      this.formView.showAddForm();
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /**
-   *  Handles action of editing student by showing edit student form
-   * @param id - id of student to edit
-   */
-  async handleEdit(id: string): Promise<void> {
-    try {
-      const student = await this.getStudentById(id);
-      if (!student) {
-        throw new StudentNotFoundError(id);
-      }
-      this.formView.showEditForm(student);
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /**
-   * Handles action of deleting a student by showing the confirmation dialog
-   * @param id - the id of student to delete
-   */
-  handleDelete(id: string): void {
-    try {
-      ToastHandler.showConfirmation(
-        'Confirm Deletion',
-        'Are you sure you want to delete this student?',
-        async () => {
-          try {
-            this.loadingSpinner.show();
-            await this.deleteStudent(id);
-
-            await this.renderStudents(true);
-
-            ToastHandler.show('success', 'Success', 'Student deleted successfully');
-          } catch (error) {
-            this.handleError(error);
-          } finally {
-            this.loadingSpinner.hide();
-          }
-        },
-        () => {},
-      );
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /**
    * Deletes a student from storage
    * @param id: id of student to delete
    * @return an array of student excluding the deleted student
@@ -575,25 +614,6 @@ export class StudentController extends BaseController {
         throw error;
       }
       throw new StorageError(`Failed to delete student: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  // Add a getter for the list view
-  public getListView(): StudentListView {
-    return this.listView;
-  }
-
-  /**
-   * Sidebar toggle function
-   */
-  initializeSidebarToggle(): void {
-    const sidebarToggleButton = document.querySelector('#sidebarToggle');
-    const sidebar = document.querySelector('.sidebar') as HTMLElement;
-
-    if (sidebarToggleButton && sidebar) {
-      sidebarToggleButton.addEventListener('click', (e) => {
-        sidebar.classList.toggle('expanded');
-      });
     }
   }
 }

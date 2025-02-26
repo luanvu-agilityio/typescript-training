@@ -33,7 +33,10 @@ export class Validator {
     return !isNaN(inputDate.getTime()) && inputDate <= today;
   }
 
-  static validateForm(student: Partial<Student>): {
+  static validateForm(
+    student: Partial<Student>,
+    existingStudents: Student[] = [],
+  ): {
     isValid: boolean;
     errors: Record<string, string>;
   } {
@@ -74,9 +77,43 @@ export class Validator {
       errors.dateAdmission = ERROR_MESSAGES.INVALID.DATE;
     }
 
+    // Check for unique email
+    if (!errors.email && student.email && existingStudents.length > 0) {
+      if (!this.validateUniqueEmail(student.email, existingStudents, student.id)) {
+        errors.email = ERROR_MESSAGES.DUPLICATE.EMAIL;
+      }
+    }
+
+    // Check for unique enrollment number
+    if (!errors.enrollNum && student.enrollNum && existingStudents.length > 0) {
+      if (!this.validateUniqueEnrollmentNumber(student.enrollNum, existingStudents, student.id)) {
+        errors.enrollNum = ERROR_MESSAGES.DUPLICATE.ENROLL_NUM;
+      }
+    }
+
     return {
       isValid: Object.keys(errors).length === 0,
       errors,
     };
+  }
+
+  static validateUniqueEmail(
+    email: string,
+    existingStudents: Student[],
+    currentStudentId?: string,
+  ): boolean {
+    return !existingStudents.some(
+      (student) => student.email === email && student.id !== currentStudentId,
+    );
+  }
+
+  static validateUniqueEnrollmentNumber(
+    enrollNum: string,
+    existingStudents: Student[],
+    currentStudentId?: string,
+  ): boolean {
+    return !existingStudents.some(
+      (student) => student.enrollNum === enrollNum && student.id !== currentStudentId,
+    );
   }
 }
