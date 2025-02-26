@@ -173,42 +173,32 @@ export class SortManager {
    * @param field - The new sort field.
    */
   public handleSortFieldChange(field: SortField): void {
-    if (this.currentSort.field !== field) {
+    if (!this.currentSort) {
+      this.currentSort = { field, order: 'asc' };
+    } else {
       this.currentSort.field = field;
-      this.onSort(this.sortStudents(this.allStudents));
     }
+    this.onSort(this.sortStudents(this.allStudents));
   }
 
   /**
    * Handles sort button click event.
    */
   public handleSortButtonClick(): void {
-    this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
+    if (!this.currentSort) {
+      this.currentSort = { field: 'name', order: 'asc' };
+    } else {
+      this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
+    }
     this.onSort(this.sortStudents(this.allStudents));
   }
 
   /**
-   * Sets the sort order directly.
-   * @param order - The sort order to set
+   * Updates the data source for the sort manager
+   * @param students - The new student array
    */
-
-  public setSortOrder(order: SortOrder): void {
-    if (this.currentSort.order !== order) {
-      this.currentSort.order = order;
-      this.onSort(this.sortStudents(this.allStudents));
-    }
-  }
-
-  /**
-   * Sets the complete sort configuration.
-   * @param config - The sort configuration to set
-   */
-
-  public setSortConfig(config: SortConfig): void {
-    if (this.currentSort.field !== config.field && this.currentSort.order !== config.order) {
-      this.currentSort = { ...config };
-      this.onSort(this.sortStudents(this.allStudents));
-    }
+  public updateDataSource(students: Student[]): void {
+    this.allStudents = [...students];
   }
 
   /**
@@ -299,6 +289,8 @@ export class StudentController extends BaseController {
       this.handleDelete.bind(this),
       this.handleEdit.bind(this),
       this.handleAddNew.bind(this),
+      () => this.sortManager.handleSortButtonClick(),
+      (field: SortField) => this.sortManager.handleSortFieldChange(field),
     );
 
     this.formView = new StudentFormView(this.handleSave.bind(this), this.handleCancel.bind(this));
@@ -335,36 +327,29 @@ export class StudentController extends BaseController {
    */
   private handleSort(students: Student[]): void {
     this.allStudents = students;
-    this.renderStudents(true);
+    this.paginationManager.updateData(this.allStudents);
   }
 
   /**
    * Handles search event.
    * @param students - The filtered array of students.
    */
-   private handleSearch(students: Student[]): void {
+  private handleSearch(students: Student[]): void {
     // Update the allStudents array with the filtered results
     this.allStudents = students;
 
-    // Apply current sort to maintain consistency
-    const sortedStudents = this.sortManager.sortStudents(this.allStudents);
-
     // Update pagination with the new dataset (this will trigger UI update)
-    this.paginationManager.updateData(sortedStudents);
+    this.paginationManager.updateData(this.allStudents);
   }
 
   /**
    * Handles search query input.
    * @param query - The search query.
    */
- public async handleSearchingQuery(query: string): Promise<void> {
+  public async handleSearchingQuery(query: string): Promise<void> {
     try {
-      this.loadingSpinner.show();
-      // Use the cached allStudents if available, otherwise fetch them
-      const students = this.allStudents.length > 0 ? this.allStudents : await this.getAllStudents();
-
-      // Apply search filtering
-      this.searchManager.searchStudents(query, students);
+      const allStudents = await this.getAllStudents();
+      this.searchManager.searchStudents(query, allStudents);
     } catch (error) {
       this.handleError(error);
     } finally {
@@ -382,14 +367,18 @@ export class StudentController extends BaseController {
     try {
       // Get and update all students
       this.allStudents = await this.getAllStudents();
+
+      // Update sort manager's data source
+      this.sortManager.updateDataSource(this.allStudents);
+
       // Apply current sort
-      this.allStudents = this.sortManager.sortStudents(this.allStudents);
+      const sortedStudents = this.sortManager.sortStudents(this.allStudents);
 
       // Update pagination with new dataset
-      this.paginationManager.updateData(this.allStudents);
-      // Update sort UI
+      this.paginationManager.updateData(sortedStudents);
 
-      this.sortDropdownHandler.updateSortUI(this.sortManager.getCurrentSort());
+      // Update sort UI
+      this.listView.updateSortUI(this.sortManager.getCurrentSort());
     } catch (error) {
       this.handleError(error);
     }

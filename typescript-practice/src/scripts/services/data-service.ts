@@ -95,7 +95,6 @@ class LocalStorageService implements BaseService {
     students[index] = normalizedStudent;
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
     return normalizedStudent;
-    return normalizedStudent;
   }
 
   async delete(id: string): Promise<void> {
@@ -173,7 +172,6 @@ class ApiDataService implements BaseService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(normalizedStudent),
-        body: JSON.stringify(normalizedStudent),
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
@@ -193,7 +191,6 @@ class ApiDataService implements BaseService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(normalizedStudent),
         body: JSON.stringify(normalizedStudent),
       });
       return this.handleResponse<Student>(response);

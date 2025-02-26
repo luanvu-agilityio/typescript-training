@@ -14,22 +14,28 @@ import sortDownIcon from '../../assets/icons/topbar-icons/sort-down.png';
 export class StudentListView {
   private tableBody: HTMLElement;
   private addButton: HTMLElement | null;
+  private sortButton: HTMLElement | null;
+  private sortDropdown: HTMLElement | null;
 
   /**
    * Init the StudentListView with the provided callbacks for handling add, edit, and delete actions.
    * @param onDelete - Callback function to handle deleting a student.
    * @param onEdit - Callback function to handle editing a student.
    * @param onAdd - Callback function to handle adding a new student.
- 
+   * @param onSortButtonClick - Callback function to handle sort button click.
+   * @param onSortFieldChange - Callback function to handle sort field change.
    */
   constructor(
     private onDelete: (id: string) => void,
     private onEdit: (id: string) => void,
     private onAdd: () => void,
+    private onSortButtonClick: () => void,
+    private onSortFieldChange: (field: SortField) => void,
   ) {
     this.tableBody = document.querySelector('.students__table tbody') as HTMLElement;
     this.addButton = document.querySelector('.students__add-btn');
-
+    this.sortButton = document.querySelector('.sort-button');
+    this.sortDropdown = document.querySelector('.sort-dropdown');
     this.attachEventListeners();
   }
 
@@ -40,8 +46,41 @@ export class StudentListView {
     if (this.addButton) {
       this.addButton.addEventListener('click', () => this.onAdd());
     }
+    if (this.sortButton) {
+      this.sortButton.addEventListener('click', () => this.onSortButtonClick());
+    }
+    if (this.sortDropdown) {
+      this.sortDropdown.querySelectorAll('.sort-option').forEach((option) => {
+        option.addEventListener('click', (e) => {
+          const field = (e.currentTarget as HTMLElement).getAttribute('data-field') as SortField;
+          if (field) {
+            this.onSortFieldChange(field);
+          }
+        });
+      });
+    }
   }
 
+  /**
+   * Updates the sort UI based on the current sort configuration.
+   * @param sortConfig - The current sort configuration.
+   */
+  updateSortUI(sortConfig: SortConfig): void {
+    const sortIcon = document.querySelector('.sort-icon') as HTMLImageElement;
+    if (sortIcon) {
+      sortIcon.src = sortConfig.order === 'asc' ? sortUpIcon : sortDownIcon;
+    }
+
+    const activeField = document.querySelector('.sort-field-active');
+    if (activeField) {
+      activeField.classList.remove('sort-field-active');
+    }
+
+    const newActiveField = document.querySelector(`[data-field="${sortConfig.field}"]`);
+    if (newActiveField) {
+      newActiveField.classList.add('sort-field-active');
+    }
+  }
   /**
    * Renders the current page of students to the table
    * @param students - Students to display on current page

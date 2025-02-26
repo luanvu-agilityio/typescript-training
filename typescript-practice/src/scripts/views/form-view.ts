@@ -43,6 +43,10 @@ export class StudentFormView {
     const formTitle = this.isEditMode ? 'Edit Student' : 'Add New Student';
     const submitButtonText = this.isEditMode ? 'Update Student' : 'Add Student';
 
+    // Clear previous form content and state
+    this.formContainer.innerHTML = '';
+    this.formErrorElements = {};
+
     this.formContainer.innerHTML = studentFormTemplate(
       formTitle,
       student,
@@ -58,7 +62,32 @@ export class StudentFormView {
         this.formErrorElements[field] = el as HTMLElement;
       }
     });
+    if (student) {
+      const nameInput = this.formContainer.querySelector('#name') as HTMLInputElement;
+      const emailInput = this.formContainer.querySelector('#email') as HTMLInputElement;
+      const phoneInput = this.formContainer.querySelector('#phone') as HTMLInputElement;
+      const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
+      const admissionInput = this.formContainer.querySelector('#admission') as HTMLInputElement;
+      const avatarImg = this.formContainer.querySelector(
+        '.profile-placeholder img',
+      ) as HTMLImageElement;
 
+      if (nameInput) nameInput.value = student.name || '';
+      if (emailInput) emailInput.value = student.email || '';
+      if (phoneInput) phoneInput.value = student.phoneNum || '';
+      if (enrollInput) enrollInput.value = student.enrollNum || '';
+
+      // Handle date field with proper formatting
+      if (admissionInput && student.dateAdmission) {
+        admissionInput.value = this.formatDateForInput(student.dateAdmission);
+      }
+
+      // Ensure avatar is updated
+      if (avatarImg && student.avatar) {
+        avatarImg.src = student.avatar;
+        avatarImg.classList.add('student-avatar');
+      }
+    }
     this.attachFormEventListeners();
     this.attachValidationListeners();
   }
@@ -69,7 +98,10 @@ export class StudentFormView {
    *
    */
   private formatDateForInput(dateString: string): string {
+    if (!dateString) return '';
     const date = parseDate(dateString);
+    // Make sure date is valid before formatting
+    if (isNaN(date.getTime())) return '';
     return date.toISOString().split('T')[0];
   }
 
@@ -357,6 +389,7 @@ export class StudentFormView {
   showAddForm(): void {
     this.isEditMode = false;
     this.currentStudentId = null;
+    this.formErrorElements = {};
     this.renderForm();
     this.show();
   }
@@ -368,6 +401,7 @@ export class StudentFormView {
   showEditForm(student: Student): void {
     this.isEditMode = true;
     this.currentStudentId = student.id ?? null;
+    this.formErrorElements = {};
     this.renderForm(student);
     this.show();
   }
