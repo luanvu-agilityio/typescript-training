@@ -293,54 +293,31 @@ export class DataServiceEnvironment {
    *
    */
   static async create(): Promise<BaseService> {
-    // Suppress console errors temporarily
-    const originalConsoleLog = console.log;
-    const originalConsoleError = console.error;
-
-    // Only log the final decision or error
-    let finalMessage = '';
-    console.log = (message) => {
-      finalMessage = message;
-    };
-    console.error = () => {};
-
+    // Test if we are at local json server
     try {
-      // Test if we are at local json server
-      try {
-        const response = await fetch(`${environment.localApiUrl}/students`);
-        if (response.ok) {
-          finalMessage = 'Using local json server';
-          environment.baseImageUrl = environment.localApiUrl;
-          return new ApiDataService(environment.localApiUrl);
-        }
-      } catch (error) {
-        // Silently fail
+      const response = await fetch(`${environment.localApiUrl}/students`);
+      if (response.ok) {
+        console.log('Using local json server');
+        environment.baseImageUrl = environment.localApiUrl;
+        return new ApiDataService(environment.localApiUrl);
       }
-
-      // Try remote Json server
-      try {
-        const response = await fetch(`${environment.remoteApiUrl}/students`);
-        if (response.ok) {
-          finalMessage = 'Using remote Json server';
-          environment.baseImageUrl = environment.remoteApiUrl;
-          return new ApiDataService(environment.remoteApiUrl);
-        }
-      } catch (error) {
-        // Silently fail
-      }
-
-      // No service available
-      finalMessage = 'Warning: No API servers available, falling back to local implementation';
-      environment.baseImageUrl = 'http://localhost:1234';
-      return new LocalStorageService(environment.baseImageUrl);
-    } finally {
-      // Restore original console functions
-      console.log = originalConsoleLog;
-      console.error = originalConsoleError;
-
-      // Log the final result
-      console.log(finalMessage);
+    } catch (error) {
+      console.log('Local json server not available');
     }
+
+    // Try remote Json server
+    try {
+      const response = await fetch(`${environment.remoteApiUrl}/students`);
+      if (response.ok) {
+        console.log('Using remote Json server');
+        environment.baseImageUrl = environment.remoteApiUrl;
+        return new ApiDataService(environment.remoteApiUrl);
+      }
+    } catch (error) {
+      console.log('Remote json server is not available');
+    }
+    environment.baseImageUrl = 'http://localhost:1234';
+    return new ApiDataService(environment.baseImageUrl);
   }
 }
 
