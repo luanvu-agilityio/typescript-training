@@ -12,11 +12,10 @@
     {
       "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
       "name": "Minh Tran",
-      "name": "Minh Tran",
       "email": "minh.tran@asnet.com.vn",
       "phoneNum": "0204853954",
       "enrollNum": "EN3451231",
-      "dateAdmission": "26-Feb, 2025",
+      "dateAdmission": "26-Jan, 2025",
       "id": "6a7f2f75-9d5b-4dc0-9b60-cb6edb897862"
     },
     {
@@ -25,7 +24,7 @@
       "email": "david@gmail.com.vn",
       "phoneNum": "0807325450",
       "enrollNum": "EN9284215",
-      "dateAdmission": "4-Mar, 2024",
+      "dateAdmission": "4-Feb, 2025",
       "id": "e001a461-f496-45ce-a578-2dd6406ba1b0"
     },
     {
@@ -34,7 +33,7 @@
       "email": "truchanhtran@gmail.com",
       "phoneNum": "0306852753",
       "enrollNum": "EN1230971",
-      "dateAdmission": "3-Apr, 2024",
+      "dateAdmission": "3-Feb, 2025",
       "id": "ca36c901-9b4a-4316-a8c4-60379d7ad9fc"
     },
     {
@@ -43,19 +42,16 @@
       "email": "thinh.nguyen@asnet.com.vn",
       "phoneNum": "09090708231",
       "enrollNum": "EN1234441",
-      "dateAdmission": "25-May, 2024",
+      "dateAdmission": "25-Jan, 2025",
       "id": "84c6303c-096a-423f-b532-3ce8432f54b6"
     },
     {
       "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
       "name": "John Doe",
       "email": "john.doe@example.com",
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
-      "name": "John Doe",
-      "email": "john.doe@example.com",
       "phoneNum": "0701234567",
       "enrollNum": "EN5678901",
-      "dateAdmission": "1-Jun, 2024",
+      "dateAdmission": "1-Feb, 2025",
       "id": "12345678-1234-1234-1234-123456789012"
     },
     {
@@ -64,7 +60,7 @@
       "email": "jane.smith@example.com",
       "phoneNum": "0801234567",
       "enrollNum": "EN2345678",
-      "dateAdmission": "2-Jul, 2024",
+      "dateAdmission": "2-Feb, 2025",
       "id": "23456789-2345-2345-2345-234567890123"
     },
     {
@@ -73,7 +69,7 @@
       "email": "alice.johnson@example.com",
       "phoneNum": "0901234567",
       "enrollNum": "EN3456789",
-      "dateAdmission": "3-Aug, 2024",
+      "dateAdmission": "3-Feb, 2025",
       "id": "34567890-3456-3456-3456-345678901234"
     },
     {
@@ -82,7 +78,7 @@
       "email": "bob.brown@example.com",
       "phoneNum": "1001234567",
       "enrollNum": "EN4567890",
-      "dateAdmission": "4-Sep, 2024",
+      "dateAdmission": "4-Feb, 2025",
       "id": "45678901-4567-4567-4567-456789012345"
     },
     {
@@ -91,7 +87,7 @@
       "email": "chris.green@example.com",
       "phoneNum": "1101234567",
       "enrollNum": "EN5678902",
-      "dateAdmission": "5-Oct, 2024",
+      "dateAdmission": "5-Feb, 2025",
       "id": "56789012-5678-5678-5678-567890123456"
     },
     {
@@ -100,7 +96,7 @@
       "email": "emily.white@example.com",
       "phoneNum": "1201234567",
       "enrollNum": "EN6789012",
-      "dateAdmission": "6-Nov, 2024",
+      "dateAdmission": "6-Feb, 2025",
       "id": "67890123-6789-6789-6789-678901234567"
     },
     {
@@ -109,7 +105,7 @@
       "email": "frank.black@example.com",
       "phoneNum": "1301234567",
       "enrollNum": "EN7890123",
-      "dateAdmission": "7-Dec, 2024",
+      "dateAdmission": "7-Feb, 2025",
       "id": "78901234-7890-7890-7890-789012345678"
     },
     {
@@ -118,7 +114,7 @@
       "email": "grace.blue@example.com",
       "phoneNum": "1401234567",
       "enrollNum": "EN8901234",
-      "dateAdmission": "28-Apr, 2024",
+      "dateAdmission": "8-Feb, 2025",
       "id": "89012345-8901-8901-8901-890123456789"
     },
     {
@@ -127,7 +123,7 @@
       "email": "henry.yellow@example.com",
       "phoneNum": "1501234567",
       "enrollNum": "EN9012345",
-      "dateAdmission": "9-Mar, 2024",
+      "dateAdmission": "9-Feb, 2025",
       "id": "90123456-9012-9012-9012-901234567890"
     }
   ]
