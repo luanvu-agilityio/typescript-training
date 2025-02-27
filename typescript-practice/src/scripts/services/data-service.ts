@@ -23,13 +23,42 @@ const environment: Environment = {
  * @param baseUrl - the base url to use if avatar url is relative
  * @returns the normalized avatar url
  */
+/**
+ * Normalizes the avatar url to ensure it is properly accessible
+ * @param avatar - the avatar url to normalize
+ * @param baseUrl - the base url to use if avatar url is relative
+ * @returns the normalized avatar url
+ */
 const normalizeAvatarUrl = (avatar: string, baseUrl: string): string => {
   if (!avatar) return '';
 
+  // Default avatar path that should be accessible from the app's domain
+  const defaultAvatarPath = '/assets/images/user-images/user-profile.png';
+
+  // For absolute URLs from the database (containing user-profile.png)
+  if (avatar.startsWith('http') && avatar.includes('user-profile')) {
+    // Use the local default avatar instead of the database URL
+    return defaultAvatarPath;
+  }
+
+  // Keep fully qualified URLs intact
   if (avatar.startsWith('http')) return avatar;
 
+  // For local asset references, make sure they're absolute paths
+  if (avatar.startsWith('./assets/')) {
+    // Convert './assets/...' to '/assets/...'
+    return avatar.substring(1);
+  }
+
+  // For plain filenames, build a proper path
   const fileName = avatar.includes('/') ? avatar.split('/').pop() : avatar;
 
+  // Check if it's a profile image filename
+  if (fileName && fileName.includes('user-profile')) {
+    return defaultAvatarPath;
+  }
+
+  // For other files, use the base URL
   return `${baseUrl}/${fileName}`;
 };
 
