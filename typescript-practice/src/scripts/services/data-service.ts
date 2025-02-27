@@ -293,54 +293,35 @@ export class DataServiceEnvironment {
    *
    */
   static async create(): Promise<BaseService> {
-    // Suppress console errors temporarily
-    const originalConsoleLog = console.log;
-    const originalConsoleError = console.error;
-
-    // Only log the final decision or error
-    let finalMessage = '';
-    console.log = (message) => {
-      finalMessage = message;
+    // Silence fetch errors by using a custom fetch wrapper
+    const silentFetch = async (url: string) => {
+      try {
+        return await fetch(url);
+      } catch (error) {
+        // Return a fake failed response instead of throwing an error
+        return new Response(null, { status: 0, statusText: 'Failed silently' });
+      }
     };
-    console.error = () => {};
 
-    try {
-      // Test if we are at local json server
-      try {
-        const response = await fetch(`${environment.localApiUrl}/students`);
-        if (response.ok) {
-          finalMessage = 'Using local json server';
-          environment.baseImageUrl = environment.localApiUrl;
-          return new ApiDataService(environment.localApiUrl);
-        }
-      } catch (error) {
-        // Silently fail
-      }
-
-      // Try remote Json server
-      try {
-        const response = await fetch(`${environment.remoteApiUrl}/students`);
-        if (response.ok) {
-          finalMessage = 'Using remote Json server';
-          environment.baseImageUrl = environment.remoteApiUrl;
-          return new ApiDataService(environment.remoteApiUrl);
-        }
-      } catch (error) {
-        // Silently fail
-      }
-
-      // No service available
-      finalMessage = 'Warning: No API servers available, falling back to local implementation';
-      environment.baseImageUrl = 'http://localhost:1234';
-      return new LocalStorageService(environment.baseImageUrl);
-    } finally {
-      // Restore original console functions
-      console.log = originalConsoleLog;
-      console.error = originalConsoleError;
-
-      // Log the final result
-      console.log(finalMessage);
+    // Test local json server without showing errors
+    const localResponse = await silentFetch(`${environment.localApiUrl}/students`);
+    if (localResponse.ok) {
+      console.log('Using local json server');
+      environment.baseImageUrl = environment.localApiUrl;
+      return new ApiDataService(environment.localApiUrl);
     }
+
+    // Try remote Json server without showing errors
+    const remoteResponse = await silentFetch(`${environment.remoteApiUrl}/students`);
+    if (remoteResponse.ok) {
+      console.log('Using remote Json server');
+      environment.baseImageUrl = environment.remoteApiUrl;
+      return new ApiDataService(environment.remoteApiUrl);
+    }
+
+    // If both failed, use localStorage silently
+    console.log('All API servers unavailable, using LocalStorage fallback');
+    return new LocalStorageService(environment.baseImageUrl);
   }
 }
 
