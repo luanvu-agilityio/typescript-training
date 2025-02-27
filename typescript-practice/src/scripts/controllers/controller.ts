@@ -262,7 +262,12 @@ export class SearchManager {
 export class StudentController extends BaseController {
   private allStudents: Student[] = [];
   // Core properties
+  // Core properties
   private readonly dataService: BaseService;
+  private readonly listView: StudentListView;
+  private readonly formView: StudentFormView;
+
+  // Manager classes
   private readonly listView: StudentListView;
   private readonly formView: StudentFormView;
 
@@ -285,10 +290,12 @@ export class StudentController extends BaseController {
     this.dataService = dataService;
 
     // Initialize managers with their callback functions
+    // Initialize managers with their callback functions
     this.paginationManager = new PaginationManager(this.updateDisplayedStudents.bind(this));
     this.sortManager = new SortManager(this.handleSort.bind(this));
     this.searchManager = new SearchManager(this.handleSearch.bind(this));
 
+    // Initialize views with their event handlers
     // Initialize views with their event handlers
     this.listView = new StudentListView(
       this.handleDelete.bind(this),
@@ -298,6 +305,13 @@ export class StudentController extends BaseController {
       (field: SortField) => this.sortManager.handleSortFieldChange(field),
     );
 
+    this.formView = new StudentFormView(
+      this.handleSave.bind(this),
+      this.handleCancel.bind(this),
+      async () => await this.getAllStudents(),
+    );
+
+    // Initialize sort dropdown handler
     this.formView = new StudentFormView(
       this.handleSave.bind(this),
       this.handleCancel.bind(this),
@@ -315,6 +329,11 @@ export class StudentController extends BaseController {
       }
     }, this.sortManager.getCurrentSort());
   }
+
+  /**---------------------
+   * PUBLIC METHODS
+   * ---------------------
+   */
 
   /**---------------------
    * PUBLIC METHODS
@@ -495,6 +514,8 @@ export class StudentController extends BaseController {
   private async handleSave(studentData: Partial<Student>): Promise<void> {
     try {
       this.loadingSpinner.show();
+      const allStudents = await this.getAllStudents();
+      const { isValid, errors } = Validator.validateForm(studentData, allStudents);
       const allStudents = await this.getAllStudents();
       const { isValid, errors } = Validator.validateForm(studentData, allStudents);
       if (!isValid) {

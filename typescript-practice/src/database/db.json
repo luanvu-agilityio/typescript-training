@@ -12,6 +12,7 @@
     {
       "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
       "name": "Minh Tran",
+      "name": "Minh Tran",
       "email": "minh.tran@asnet.com.vn",
       "phoneNum": "0204853954",
       "enrollNum": "EN3451231",
@@ -46,6 +47,9 @@
       "id": "84c6303c-096a-423f-b532-3ce8432f54b6"
     },
     {
+      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "name": "John Doe",
+      "email": "john.doe@example.com",
       "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
       "name": "John Doe",
       "email": "john.doe@example.com",

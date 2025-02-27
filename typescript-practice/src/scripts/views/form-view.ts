@@ -8,12 +8,17 @@ import defaultAvatar from '../../assets/images/user-images/user-profile.png';
 /**
  * @class StudentFormView
  * @description Manages student form interface including rendering, validation and event handling
+ * @description Manages student form interface including rendering, validation and event handling
  * @property {HTMLElement} formContainer - the main container element for the form
  * @property {boolean} isEditMode - identify if the form is in edit mode
  * @property {string | null} currentStudentId - id of student being edited, null for new student
  * @property {Record<string, HTMLElement>} formErrorElements - cache of error message elements
+ * @property {Record<string, HTMLElement>} formErrorElements - cache of error message elements
  */
 export class StudentFormView {
+  // ----------------------------
+  // Class properties
+  // ----------------------------
   // ----------------------------
   // Class properties
   // ----------------------------
@@ -26,12 +31,15 @@ export class StudentFormView {
   /**
    * @constructor
    * @param {(studentData: Partial<Student>) => void} onSave - callback function to handle form submission
+   * @param {(studentData: Partial<Student>) => void} onSave - callback function to handle form submission
    * @param {() => void} onCancel - callback function to handle form cancellation
+   * @param {() => Promise<Student[]>} getStudents - optional callback to fetch students for validation
    * @param {() => Promise<Student[]>} getStudents - optional callback to fetch students for validation
    */
   constructor(
     private onSave: (studentData: Partial<Student>) => void,
     private onCancel: () => void,
+    private getStudents?: () => Promise<Student[]>,
     private getStudents?: () => Promise<Student[]>,
   ) {
     this.formContainer = document.createElement('div');
@@ -105,6 +113,7 @@ export class StudentFormView {
   /**
    * Handles action of rendering form
    * @param {Student} student - optional student data for editing
+   * @param {Student} student - optional student data for editing
    * @description renders the form with appropriate content to tailor the needs of adding or editing student
    */
   private renderForm(student?: Student): void {
@@ -122,6 +131,16 @@ export class StudentFormView {
       this.formatDateForInput.bind(this),
     );
 
+    this.cacheErrorElements();
+    this.populateFormFields(student);
+    this.attachFormEventListeners();
+    this.attachValidationListeners();
+  }
+
+  /**
+   * Cache error elements for future updates
+   */
+  private cacheErrorElements(): void {
     this.cacheErrorElements();
     this.populateFormFields(student);
     this.attachFormEventListeners();
@@ -156,12 +175,37 @@ export class StudentFormView {
     const avatarImg = this.formContainer.querySelector(
       '.profile-placeholder img',
     ) as HTMLImageElement;
+  }
+
+  /**
+   * Populate form fields with student data if provided
+   * @param {Student} student - optional student data
+   */
+  private populateFormFields(student?: Student): void {
+    if (!student) return;
+
+    const nameInput = this.formContainer.querySelector('#name') as HTMLInputElement;
+    const emailInput = this.formContainer.querySelector('#email') as HTMLInputElement;
+    const phoneInput = this.formContainer.querySelector('#phone') as HTMLInputElement;
+    const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
+    const admissionInput = this.formContainer.querySelector('#admission') as HTMLInputElement;
+    const avatarImg = this.formContainer.querySelector(
+      '.profile-placeholder img',
+    ) as HTMLImageElement;
 
     if (nameInput) nameInput.value = student.name || '';
     if (emailInput) emailInput.value = student.email || '';
     if (phoneInput) phoneInput.value = student.phoneNum || '';
     if (enrollInput) enrollInput.value = student.enrollNum || '';
+    if (nameInput) nameInput.value = student.name || '';
+    if (emailInput) emailInput.value = student.email || '';
+    if (phoneInput) phoneInput.value = student.phoneNum || '';
+    if (enrollInput) enrollInput.value = student.enrollNum || '';
 
+    // Handle date field with proper formatting
+    if (admissionInput && student.dateAdmission) {
+      admissionInput.value = this.formatDateForInput(student.dateAdmission);
+    }
     // Handle date field with proper formatting
     if (admissionInput && student.dateAdmission) {
       admissionInput.value = this.formatDateForInput(student.dateAdmission);
@@ -217,7 +261,12 @@ export class StudentFormView {
     const closeBtn = this.formContainer.querySelector('.close-btn');
     closeBtn?.addEventListener('click', () => this.hide());
   }
+  }
 
+  /**
+   * Attach cancel button listener
+   */
+  private attachCancelButtonListener(): void {
   /**
    * Attach cancel button listener
    */
@@ -228,7 +277,12 @@ export class StudentFormView {
       this.onCancel();
     });
   }
+  }
 
+  /**
+   * Attach submit button listener
+   */
+  private attachSubmitButtonListener(): void {
   /**
    * Attach submit button listener
    */
@@ -236,7 +290,12 @@ export class StudentFormView {
     const submitBtn = this.formContainer.querySelector('.btn-add');
     submitBtn?.addEventListener('click', () => this.handleSubmit());
   }
+  }
 
+  /**
+   * Attach image upload listeners
+   */
+  private attachImageUploadListeners(): void {
   /**
    * Attach image upload listeners
    */
@@ -334,6 +393,74 @@ export class StudentFormView {
   // ----------------------------
 
   /**
+   * Handles form submission by collecting data and calling onSave callback function
+   */
+  private handleSubmit(): void {
+    const studentData = this.getFormData();
+    this.onSave(studentData);
+  }
+
+  // ----------------------------
+  // Form data methods
+  // ----------------------------
+
+  /**
+   * Collects and format form input values
+   * @return {Partial<Student>} collect form data as a partial student object
+   */
+  private getFormData(): Partial<Student> {
+    const nameInput = this.formContainer.querySelector('#name') as HTMLInputElement;
+    const emailInput = this.formContainer.querySelector('#email') as HTMLInputElement;
+    const phoneInput = this.formContainer.querySelector('#phone') as HTMLInputElement;
+    const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
+    const admissionInput = this.formContainer.querySelector('#admission') as HTMLInputElement;
+    const avatarImg = this.formContainer.querySelector('.student-avatar') as HTMLImageElement;
+
+    // Format the date for display
+    let formattedDate = '';
+    if (admissionInput.value) {
+      const date = new Date(admissionInput.value);
+      formattedDate = formatDate(date);
+    }
+
+    const studentData: Partial<Student> = {
+      name: nameInput.value,
+      email: emailInput.value,
+      phoneNum: phoneInput.value,
+      enrollNum: enrollInput.value,
+      dateAdmission: formattedDate,
+      avatar: avatarImg?.src || `${defaultAvatar}'`,
+    };
+
+    if (this.currentStudentId) {
+      studentData.id = this.currentStudentId;
+    }
+
+    return studentData;
+  }
+
+  /**
+   * Format dates string for input field
+   * @param {string} dateString - date string to format
+   * @return {string} formatted date string
+   */
+  private formatDateForInput(dateString: string): string {
+    if (!dateString) return '';
+    const date = parseDate(dateString);
+    // Make sure date is valid before formatting
+    if (isNaN(date.getTime())) return '';
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // ----------------------------
+  // Validation methods
+  // ----------------------------
+
+  /**
    * Attaches input event listeners for real-time validation
    */
   private attachValidationListeners(): void {
@@ -345,6 +472,7 @@ export class StudentFormView {
 
       let timeoutId: number;
 
+      // Debounced validation for typing
       // Debounced validation for typing
       input.addEventListener('keyup', (e) => {
         const target = e.target as HTMLInputElement;
@@ -358,6 +486,7 @@ export class StudentFormView {
         }, 2000); // 2 seconds delay
       });
 
+      // Immediate validation on blur
       // Immediate validation on blur
       input.addEventListener('blur', (e) => {
         const target = e.target as HTMLInputElement;
@@ -410,6 +539,7 @@ export class StudentFormView {
   /**
    * Validates a single input and updates error state
    * @param {HTMLInputElement} input - input element to validate
+   * @param {HTMLInputElement} input - input element to validate
    */
   private validateSingleInput(input: HTMLInputElement): void {
     const value = input.value;
@@ -430,6 +560,18 @@ export class StudentFormView {
     // Create partial student object with just this field
     const partialStudent: Partial<Student> = {};
     partialStudent[field as keyof Student] = value;
+
+    // Add the current student ID if in edit mode
+    if (this.isEditMode && this.currentStudentId) {
+      partialStudent.id = this.currentStudentId;
+    }
+
+    // For email and enrollment, check for duplicates
+    if (field === 'email' || field === 'enrollNum') {
+      // Get all students asynchronously and perform validation
+      this.checkDuplicateField(field, value, partialStudent);
+      return;
+    }
 
     // Add the current student ID if in edit mode
     if (this.isEditMode && this.currentStudentId) {
@@ -535,6 +677,8 @@ export class StudentFormView {
    * Updates error for a specific field without affecting other fields
    * @param {string} field - field name
    * @param {string} errorMessage - error message to display
+   * @param {string} field - field name
+   * @param {string} errorMessage - error message to display
    */
   private updateSingleFieldError(field: string, errorMessage: string): void {
     const errorEl = this.formErrorElements[field];
@@ -545,7 +689,9 @@ export class StudentFormView {
 
     // Find and highlight the corresponding input
     const inputSelector = this.getInputSelectorFromField(field);
+    const inputSelector = this.getInputSelectorFromField(field);
     const input = this.formContainer.querySelector(inputSelector) as HTMLInputElement;
+
 
     if (input) {
       input.classList.add('is-invalid');
@@ -562,8 +708,10 @@ export class StudentFormView {
     this.updateSubmitButtonState();
   }
 
+
   /**
    * Clears error for a specific field
+   * @param {string} field - field name
    * @param {string} field - field name
    */
   private clearFieldError(field: string): void {
@@ -575,7 +723,9 @@ export class StudentFormView {
 
     // Find input and remove error class
     const inputSelector = this.getInputSelectorFromField(field);
+    const inputSelector = this.getInputSelectorFromField(field);
     const input = this.formContainer.querySelector(inputSelector) as HTMLInputElement;
+
 
     if (input) {
       input.classList.remove('is-invalid');

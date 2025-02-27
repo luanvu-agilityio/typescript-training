@@ -138,6 +138,20 @@ export class Validator {
       }
     }
 
+    // Check for unique email
+    if (!errors.email && student.email && existingStudents.length > 0) {
+      if (!this.validateUniqueEmail(student.email, existingStudents, student.id)) {
+        errors.email = ERROR_MESSAGES.DUPLICATE.EMAIL;
+      }
+    }
+
+    // Check for unique enrollment number
+    if (!errors.enrollNum && student.enrollNum && existingStudents.length > 0) {
+      if (!this.validateUniqueEnrollmentNumber(student.enrollNum, existingStudents, student.id)) {
+        errors.enrollNum = ERROR_MESSAGES.DUPLICATE.ENROLL_NUM;
+      }
+    }
+
     return {
       isValid: Object.keys(errors).length === 0,
       errors,
