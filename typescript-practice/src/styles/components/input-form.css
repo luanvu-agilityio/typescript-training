@@ -73,21 +73,30 @@
   font-size: var(--font-size-14);
 }
 
-.form-group:nth-child(5) .calendar-input input {
-  border: none;
-}
-
 .form-group:nth-child(5) .calendar-input {
   display: flex;
   justify-content: center;
   align-items: center;
   border: 1px solid var(--input-border-color);
   border-radius: 4px;
+  position: relative;
+}
+
+.form-group:nth-child(5) .calendar-input input {
+  border: none;
+  width: 100%;
+  padding: 1rem;
+  font-size: var(--font-size-14);
+  z-index: 100;
 }
 
 .form-group:nth-child(5) .calendar-input img {
   padding-right: 1rem;
   cursor: pointer;
+  position: absolute;
+  right: 0;
+  pointer-events: auto;
+  z-index: 1;
 }
 
 .form-group:nth-child(5) input::-webkit-calendar-picker-indicator {
@@ -150,7 +159,14 @@
 
 .btn-add:hover {
   background-color: #1294ff;
-  /* color: var(--black-color); */
+}
+
+.btn-add.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: var(--light-gray-color);
+  border-color: var(--semi-gray-color);
 }
 
 .profile-upload {

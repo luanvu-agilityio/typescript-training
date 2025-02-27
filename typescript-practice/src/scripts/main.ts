@@ -7,7 +7,6 @@ async function startApp() {
     console.log('Application started successfully');
   } catch (error) {
     console.error('Failed to start application:', error);
-    // Could add fallback UI or retry logic here
   }
 }
 

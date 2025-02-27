@@ -2,13 +2,14 @@
 import editIcon from '../../assets/icons/student-list-icons/edit.svg';
 // @ts-expect-error
 import deleteIcon from '../../assets/icons/student-list-icons/delete.svg';
+import Student from '../interfaces/student';
 
-export const studentRowTemplate = (student: any) => `
+export const studentRowTemplate = (student: Student) => `
   <td class="students__table-cell">
     <img src="${student.avatar}" alt="Student ${student.name}" />
   </td>
-  <td class="students__table-cell" data-label="Name">${student.name}</td>
-  <td class="students__table-cell" data-label="Email">${student.email}</td>
+  <td class="students__table-cell name-cell" data-label="Name">${student.name}</td>
+  <td class="students__table-cell email-cell" data-label="Email">${student.email}</td>
   <td class="students__table-cell" data-label="Phone Number">${student.phoneNum}</td>
   <td class="students__table-cell" data-label="Enroll Number">${student.enrollNum}</td>
   <td class="students__table-cell" data-label="Date Admission">${student.dateAdmission}</td>

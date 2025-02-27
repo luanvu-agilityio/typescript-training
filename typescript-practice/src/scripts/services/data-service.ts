@@ -17,6 +17,12 @@ const environment: Environment = {
   baseImageUrl: 'http://localhost:3000',
 };
 
+/**
+ * Normalizes the avatar url to ensure it is a full url
+ * @param avatar - the avatar url to normalize
+ * @param baseUrl - the base url to use if avatar url is relative
+ * @returns the normalized avatar url
+ */
 const normalizeAvatarUrl = (avatar: string, baseUrl: string): string => {
   if (!avatar) return '';
 
@@ -35,6 +41,9 @@ export interface BaseService {
   delete(id: string): Promise<void>;
 }
 
+/**
+ * LocalStorageService class implements BaseService to manage student data using localStorage
+ */
 class LocalStorageService implements BaseService {
   private readonly STORAGE_KEY = 'all students';
   private baseImageUrl: string;
@@ -42,6 +51,12 @@ class LocalStorageService implements BaseService {
   constructor(baseImageUrl: string) {
     this.baseImageUrl = baseImageUrl;
   }
+
+  /**
+   * Retrieves all students from localStorage
+   * @returns a promise that resolves to an array of students
+   *
+   */
   async getAll(): Promise<Student[]> {
     try {
       const studentJson = localStorage.getItem(this.STORAGE_KEY);
@@ -53,11 +68,15 @@ class LocalStorageService implements BaseService {
         avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
       }));
     } catch (error) {
-      console.error('Error retrieving student from localStorage:', error);
       throw new Error('fail to retrieve students form local storage');
     }
   }
 
+  /**
+   * Retrieves a student by id from localStorage
+   * @param id - the id of student to retrieve
+   * @returns a promise that resolves to the student, or undefined if not found
+   */
   async getById(id: string): Promise<Student | undefined> {
     const students = await this.getAll();
     const student = students.find((s) => s.id === id);
@@ -70,6 +89,11 @@ class LocalStorageService implements BaseService {
     };
   }
 
+  /**
+   * Creates a new student and save it to localStorage
+   * @param student - the student to create
+   * @returns a promise that resolved to created student
+   */
   async create(student: Student): Promise<Student> {
     const students = await this.getAll();
     students.push(student);
@@ -80,6 +104,11 @@ class LocalStorageService implements BaseService {
     };
   }
 
+  /**
+   * Update the existing student in localStorage
+   * @param student - the student to update
+   * @returns a premise that resolved to the updated student
+   */
   async update(student: Student): Promise<Student> {
     const students = await this.getAll();
     const index = students.findIndex((s) => s.id === student.id);
@@ -97,6 +126,11 @@ class LocalStorageService implements BaseService {
     return normalizedStudent;
   }
 
+  /**
+   * Deletes student by id from localStorage
+   * @param id = the id of student to delete
+   * @returns - a promise that resolved when the student is deleted
+   */
   async delete(id: string): Promise<void> {
     const students = await this.getAll();
     const filteredStudents = students.filter((s) => s.id !== id);
@@ -107,6 +141,9 @@ class LocalStorageService implements BaseService {
   }
 }
 
+/**
+ * ApiDataService class implement BaseService to manage student using a remote API
+ */
 class ApiDataService implements BaseService {
   private readonly baseUrl: string;
   private readonly baseImageUrl: string;
@@ -115,6 +152,11 @@ class ApiDataService implements BaseService {
     this.baseImageUrl = baseUrl;
   }
 
+  /**
+   * Handles the response from API
+   * @param response - the response from the API
+   * @returns  a promise that resolves to the parse response date
+   */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       throw new Error(`Error! Status: ${response.status}`);
@@ -137,6 +179,10 @@ class ApiDataService implements BaseService {
     return data;
   }
 
+  /**
+   * Retrieves all students from api
+   * @returns a promise that resolves to an array of student
+   */
   async getAll(): Promise<Student[]> {
     try {
       const response = await fetch(this.baseUrl);
@@ -147,6 +193,11 @@ class ApiDataService implements BaseService {
     }
   }
 
+  /**
+   * Retrieves a student by id from API\
+   * @param id = the id of student  to retrieve
+   * @returns a promise that resolves to the student, or undefined if notfound
+   */
   async getById(id: string): Promise<Student | undefined> {
     try {
       const response = await fetch(`${this.baseUrl}/${id}`);
@@ -160,6 +211,12 @@ class ApiDataService implements BaseService {
     }
   }
 
+  /**
+   * Creates a new student and save it the API
+   * @param student - the student to create
+   * @returns a promise that resolves to the created student
+   *
+   */
   async create(student: Student): Promise<Student> {
     try {
       const normalizedStudent = {
@@ -180,6 +237,11 @@ class ApiDataService implements BaseService {
     }
   }
 
+  /**
+   * update an existing student from API
+   * @param student - the student to update
+   * @returns a promise that resolves to the updated student
+   */
   async update(student: Student): Promise<Student> {
     try {
       const normalizedStudent = {
@@ -200,6 +262,11 @@ class ApiDataService implements BaseService {
     }
   }
 
+  /**
+   * Deletes a student by id from api
+   * @param id -  the id of student to delete
+   * @returns a promise that resolves when a student is deleted
+   */
   async delete(id: string): Promise<void> {
     try {
       const response = await fetch(`${this.baseUrl}/${id}`, {
@@ -215,7 +282,16 @@ class ApiDataService implements BaseService {
   }
 }
 
+/**
+ * DataServiceEnvironment class provides a method to create an appropriate data service instance
+ * based on the availability of local or remote api
+ */
 export class DataServiceEnvironment {
+  /**
+   * Create an instance of BaseService based on the availability of of local or remote api
+   * @returns a promise that resolves to an instance of BaseService
+   *
+   */
   static async create(): Promise<BaseService> {
     // Test if we are at local json server
     try {
@@ -245,6 +321,10 @@ export class DataServiceEnvironment {
   }
 }
 
+/**
+ * Get the singleton instance of BaseService
+ * @returns a Promise that resolves to the singleton instance of BaseService
+ */
 let dataServiceInstance: BaseService | null = null;
 export const getDataService = async (): Promise<BaseService> => {
   if (!dataServiceInstance) {
@@ -253,6 +333,9 @@ export const getDataService = async (): Promise<BaseService> => {
   return dataServiceInstance;
 };
 
+/**
+ * Init the data service and attach it to the window object for global access
+ */
 DataServiceEnvironment.create().then((service) => {
   (window as any).dataService = service;
 });

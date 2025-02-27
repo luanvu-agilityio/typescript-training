@@ -3,6 +3,8 @@ import { User } from '../interfaces/user';
 
 /**
  * Function to validate email format
+ * @param email - the email to validate
+ * @return true if email is valid, otherwise false
  */
 export function isValidEmail(email: string): boolean {
   const emailRegex =
@@ -12,6 +14,8 @@ export function isValidEmail(email: string): boolean {
 
 /**
  * Function to show error message
+ * @param input - the input element to show email for
+ * @param message - the error message to display
  */
 export function showError(input: HTMLInputElement, message: string): void {
   // Remove any existing error
@@ -34,6 +38,7 @@ export function showError(input: HTMLInputElement, message: string): void {
 
 /**
  * Function to clear error
+ * @param input - the input element to clear error for
  */
 export function clearError(input: HTMLInputElement): void {
   const errorElement = input.parentElement?.querySelector('.error-message');
@@ -45,6 +50,9 @@ export function clearError(input: HTMLInputElement): void {
 
 /**
  * Function to validate form fields
+ * @param emailInput - the email input element
+ * @param passwordInput - the password input element
+ * @returns true if the form is valid, otherwise false
  */
 export function validateForm(
   emailInput: HTMLInputElement,
@@ -79,6 +87,9 @@ export function validateForm(
 
 /**
  * Function to authenticate user
+ * @param email - the user's email
+ * @param password - the user's password
+ * @returns true if the user if authenticated, otherwise false
  */
 export function authenticate(email: string, password: string): boolean {
   return DUMMY_USERS.some((user) => user.email === email && user.password === password);

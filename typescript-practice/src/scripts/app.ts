@@ -21,6 +21,9 @@ export default class App {
     this.checkAuth();
   }
 
+  /**
+   * Checks if the user is authenticated and redirects to the login page if not.
+   */
   checkAuth() {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const currentPath = window.location.pathname;

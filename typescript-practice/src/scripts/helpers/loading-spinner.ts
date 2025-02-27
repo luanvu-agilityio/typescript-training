@@ -1,5 +1,9 @@
 import { loadingTemplate } from '../templates/loading-spinner';
 
+/**
+ * LoadingSpinner class manages the display of a loading spinner on the web page.
+ * It follows the singleton pattern to ensure only one instance of the spinner exists.
+ */
 export class LoadingSpinner {
   private static instance: LoadingSpinner | null = null;
   private loadingContainer: HTMLElement | null = null;
@@ -7,10 +11,19 @@ export class LoadingSpinner {
   private lastShowTime = Date.now();
   private readonly MINIMUM_DISPLAY_TIME = 1000;
 
+  /**
+   * Private constructor to prevent direct instantiation.
+   * Initializes the loading container.
+   */
   private constructor() {
     this.initializeLoadingContainer();
   }
 
+  /**
+   * Returns the singleton instance of the LoadingSpinner.
+   * Creates the instance if it doesn't already exist.
+   * @returns The singleton instance of the LoadingSpinner.
+   */
   public static getInstance(): LoadingSpinner {
     if (!LoadingSpinner.instance) {
       LoadingSpinner.instance = new LoadingSpinner();
@@ -18,6 +31,9 @@ export class LoadingSpinner {
     return LoadingSpinner.instance;
   }
 
+  /**
+   * Initializes the loading container by appending it to the body if it doesn't already exist.
+   */
   private initializeLoadingContainer(): void {
     const existingContainer = document.getElementById('loadingContainer');
 
@@ -34,6 +50,10 @@ export class LoadingSpinner {
     this.loadingContainer = document.getElementById('loadingContainer');
   }
 
+  /**
+   * Shows the loading spinner.
+   * Increments the loading count and displays the spinner if it's not already visible.
+   */
   public show(): void {
     this.loadingCount++;
     if (this.loadingContainer && this.loadingCount > 0) {
@@ -42,6 +62,11 @@ export class LoadingSpinner {
     }
   }
 
+  /**
+   * Hides the loading spinner.
+   * Decrements the loading count and hides the spinner if there are no more active loading operations.
+   * Ensures the spinner is visible for at least the minimum display time.
+   */
   public hide(): void {
     // decrease the loading count by 1 but still have to make sure it > 0
     this.loadingCount = Math.max(0, this.loadingCount - 1);

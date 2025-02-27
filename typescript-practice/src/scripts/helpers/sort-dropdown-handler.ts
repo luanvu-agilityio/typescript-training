@@ -1,12 +1,20 @@
-import { markAsUncloneable } from 'worker_threads';
 import { SortConfig, SortField, SortOrder } from './student-sort';
 
+/**
+ * SortDropdownHandler class manages the sorting dropdown functionality.
+ * It handles user interactions with the dropdown and updates the sorting configuration.
+ */
 export class SortDropdownHandler {
   private dropdownButton: HTMLElement;
   private dropdownMenu: HTMLElement;
   private dropdownItems: NodeListOf<HTMLElement>;
   private activeItem: HTMLElement | null = null;
 
+  /**
+   * Initializes the SortDropdownHandler with the provided callback and initial sort configuration.
+   * @param onSortChange - Callback function to handle sort changes.
+   * @param initialConfig - Initial sort configuration.
+   */
   constructor(
     private onSortChange: (field: SortField, order: SortOrder) => void,
     private initialConfig: SortConfig = { field: 'name', order: 'asc' },
@@ -17,6 +25,9 @@ export class SortDropdownHandler {
     this.init();
   }
 
+  /**
+   * Initializes the dropdown by setting up event listeners and setting the initial active item.
+   */
   private init(): void {
     // Init dropdown toggle
     this.dropdownButton.addEventListener('click', () => {
@@ -50,6 +61,9 @@ export class SortDropdownHandler {
     this.setInitialActiveItem();
   }
 
+  /**
+   * Sets the initial active item based on the initial sort configuration.
+   */
   private setInitialActiveItem(): void {
     const { field, order } = this.initialConfig;
     const initialItem = Array.from(this.dropdownItems).find(
@@ -67,14 +81,24 @@ export class SortDropdownHandler {
     }
   }
 
+  /**
+   * Toggles the visibility of the dropdown menu.
+   */
   private toggleDropdown(): void {
     this.dropdownMenu.classList.toggle('hidden');
   }
 
+  /**
+   * Closes the dropdown menu.
+   */
   private closeDropdown(): void {
     this.dropdownMenu.classList.add('hidden');
   }
 
+  /**
+   * Updates the active item in the dropdown menu.
+   * @param item - The new active item.
+   */
   private updateActiveItem(item: HTMLElement): void {
     //Remove active class from previous item
     if (this.activeItem) {
@@ -87,6 +111,10 @@ export class SortDropdownHandler {
     this.activeItem = item;
   }
 
+  /**
+   * Updates the text of the dropdown button to match the selected sort option.
+   * @param text - The text to display on the dropdown button.
+   */
   private updateButtonText(text: string): void {
     const buttonText = document.createElement('span');
     buttonText.textContent = text;
@@ -101,7 +129,10 @@ export class SortDropdownHandler {
     this.dropdownButton.appendChild(arrow);
   }
 
-  // update UI to match current sort config
+  /**
+   * Updates the UI to match the current sort configuration.
+   * @param config - The current sort configuration.
+   */
   public updateSortUI(config: SortConfig): void {
     const { field, order } = config;
     const matchingItem = Array.from(this.dropdownItems).find(

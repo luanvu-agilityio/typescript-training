@@ -50,7 +50,7 @@ export const studentFormTemplate = (
         <label for="admission">Date of Admission</label>
         <div class="calendar-input">
           <input type="date" id="admission" value="${student?.dateAdmission ? formatDateForInput(student.dateAdmission) : ''}" />
-          <img src="${calendarIcon}" alt="calendar icon" />
+          <img src="${calendarIcon}" alt="calendar icon" class="calendar-icon" />
           <div class="error-message" data-field="dateAdmission"></div>
         </div>
       </div>

@@ -8,7 +8,10 @@ const loginForm = document.querySelector('.card__form') as HTMLFormElement;
 const emailInput = document.getElementById('email') as HTMLInputElement;
 const passwordInput = document.getElementById('password') as HTMLInputElement;
 
-// Add form submit event listener
+/**
+ * Handles the login form submission
+ * Validates form, authenticates the user and provides info feedback via toast
+ */
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
@@ -53,6 +56,12 @@ loginForm.addEventListener('submit', (event) => {
   }
 });
 
-// Add input event listeners to clear errors on input
+/**
+ * Clears error messages when user starts typing in the email input field
+ */
 emailInput.addEventListener('input', () => clearError(emailInput));
+
+/**
+ * Clears error messages when user starts typing in the password input field
+ */
 passwordInput.addEventListener('input', () => clearError(passwordInput));

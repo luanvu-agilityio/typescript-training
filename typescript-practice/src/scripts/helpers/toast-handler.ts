@@ -3,12 +3,20 @@ import { getToastHTML, getActionButtonsHTML, getProgressBarHTML } from '../templ
 import { ICON } from '../constants/toast-icon-src';
 type ToastType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
 
+/**
+ * ToastHandler class manages the display of toast notifications on the web page.
+ * It provides methods to show different types of toasts, including confirmation dialogs.
+ */
 export class ToastHandler {
   private static readonly DEFAULT_DURATION = 3000;
   private static readonly ANIMATION_DURATION = 500;
 
   private static readonly ICON = ICON;
 
+  /**
+   * Gets the toast container element, creating it if it doesn't already exist.
+   * @returns The toast container element.
+   */
   private static getToastContainer(): HTMLDivElement {
     let container = document.querySelector('.toast-container') as HTMLDivElement;
     if (!container) {
@@ -19,10 +27,20 @@ export class ToastHandler {
     return container;
   }
 
+  /**
+   * Get the icon url for a given toast type
+   * @param type - type of toast
+   * @return icon url
+   */
   private static getToastIcon(type: ToastType): string {
     return this.ICON[type === 'confirm' ? 'warning' : type];
   }
 
+  /**
+   * Create toast element based on provided options
+   * @param options - options for the toast
+   * @return the created toast element
+   */
   private static createToastElement(options: ToastOptions): HTMLDivElement {
     const toast = document.createElement('div');
     toast.className = ` toast toast--${options.type === 'confirm' ? 'info' : options.type}`;
@@ -38,6 +56,11 @@ export class ToastHandler {
     return toast;
   }
 
+  /**
+   *  Sets up the progress bar toast element
+   * @param toast -toast element
+   * @param duration - duration for the progress bar
+   */
   private static setProgressBar(toast: HTMLDivElement, duration: number): void {
     const progressBar = toast.querySelector('.toast__progress-bar') as HTMLDivElement;
     if (!progressBar) return;
@@ -52,6 +75,11 @@ export class ToastHandler {
     });
   }
 
+  /**
+   * Remove toast element from the DOM
+   * @param toast - the toast to remove
+   * @param onComplete - optional callback to execute after the toast is removed
+   */
   private static removeToast(toast: HTMLDivElement, onComplete?: () => void): void {
     // Clear any existing timeouts attached to this toast
     const timeoutId = parseInt(toast.dataset.timeoutId || '0');
@@ -72,6 +100,12 @@ export class ToastHandler {
     }, this.ANIMATION_DURATION);
   }
 
+  /**
+   *  Sets up the event listener for a toast element
+   * @param toast - toast element
+   * @param options - the options for the toast
+   * @param duration - the duration for the toast
+   */
   private static setupEventListeners(
     toast: HTMLDivElement,
     options: ToastOptions,
@@ -116,9 +150,23 @@ export class ToastHandler {
     }
   }
 
+  /**
+   *  Shows the toast notification
+   *  @param type - the type of toast (success, error, warning, info)
+   * @param title - the title of the toast
+   * @param message -  the message of the toast
+   */
   static show(type: ToastType, title: string, message: string): void {
     this.createToast({ type, title, message });
   }
+
+  /**
+   * Shows a confirmation toast with options to confirm or cancel
+   * @param title - the title of the toast
+   * @param message - the message of the toast
+   * @param onConfirm - callback function to execute on confirm
+   * @param onCancel -  callback function to execute on cancel.
+   */
   static showConfirmation(
     title: string,
     message: string,
@@ -134,6 +182,10 @@ export class ToastHandler {
     });
   }
 
+  /**
+   * Creates and displays a toast notification based on provided options
+   * @param options - options for the toast
+   */
   private static createToast(options: ToastOptions): void {
     const duration = options.duration ?? this.DEFAULT_DURATION;
     const container = this.getToastContainer();
