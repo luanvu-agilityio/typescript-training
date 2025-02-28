@@ -65,13 +65,6 @@
   max-width: 25rem;
 }
 
-.students__table-header:not(:first-child):not(:last-child):hover {
-  background-color: var(--orange-color);
-  color: var(--black-color);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-
 .students__table-row {
   background-color: var(--white-color);
 }
