@@ -71,11 +71,12 @@ class LocalStorageService implements BaseService {
       const studentJson = localStorage.getItem(this.STORAGE_KEY);
       const students = studentJson ? JSON.parse(studentJson) : [];
 
-      // Normalize avatar URLs
-      return students.map((student: Student) => ({
-        ...student,
-        avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      }));
+      // // Normalize avatar URLs
+      // return students.map((student: Student) => ({
+      //   ...student,
+      //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
+      // }));
+      return students;
     } catch (error) {
       throw new Error('fail to retrieve students form local storage');
     }
@@ -92,10 +93,11 @@ class LocalStorageService implements BaseService {
     if (!student) {
       throw new Error(`Student with ID ${id} is not found`);
     }
-    return {
-      ...student,
-      avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    };
+    // return {
+    //   ...student,
+    //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
+    // };
+    return student;
   }
 
   /**
@@ -107,10 +109,11 @@ class LocalStorageService implements BaseService {
     const students = await this.getAll();
     students.push(student);
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-    return {
-      ...student,
-      avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    };
+    // return {
+    //   ...student,
+    //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
+    // };
+    return student;
   }
 
   /**
@@ -124,15 +127,16 @@ class LocalStorageService implements BaseService {
     if (index === -1) {
       throw new StudentNotFoundError(`Student with Id ${student.id} is not found`);
     }
-    // Normalize avatar before storing
-    const normalizedStudent = {
-      ...student,
-      avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    };
+    // // Normalize avatar before storing
+    // const normalizedStudent = {
+    //   ...student,
+    //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
+    // };
 
-    students[index] = normalizedStudent;
+    // students[index] = normalizedStudent;
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-    return normalizedStudent;
+    // return normalizedStudent;
+    return student;
   }
 
   /**
@@ -170,22 +174,23 @@ class ApiDataService implements BaseService {
     if (!response.ok) {
       throw new Error(`Error! Status: ${response.status}`);
     }
-    const data = await response.json();
+    // const data = await response.json();
 
-    // If it's a student or array of students, normalize the avatar URLs
-    if (Array.isArray(data)) {
-      return data.map((item: any) => ({
-        ...item,
-        avatar: normalizeAvatarUrl(item.avatar, this.baseImageUrl),
-      })) as T;
-    } else if (data && typeof data === 'object' && 'avatar' in data) {
-      return {
-        ...data,
-        avatar: normalizeAvatarUrl(data.avatar, this.baseImageUrl),
-      } as T;
-    }
+    // // If it's a student or array of students, normalize the avatar URLs
+    // if (Array.isArray(data)) {
+    //   return data.map((item: any) => ({
+    //     ...item,
+    //     avatar: normalizeAvatarUrl(item.avatar, this.baseImageUrl),
+    //   })) as T;
+    // } else if (data && typeof data === 'object' && 'avatar' in data) {
+    //   return {
+    //     ...data,
+    //     avatar: normalizeAvatarUrl(data.avatar, this.baseImageUrl),
+    //   } as T;
+    // }
 
-    return data;
+    // return data;
+    return await response.json();
   }
 
   /**
@@ -228,16 +233,16 @@ class ApiDataService implements BaseService {
    */
   async create(student: Student): Promise<Student> {
     try {
-      const normalizedStudent = {
-        ...student,
-        avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      };
+      // const normalizedStudent = {
+      //   ...student,
+      //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
+      // };
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(normalizedStudent),
+        body: JSON.stringify(student),
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
@@ -253,16 +258,16 @@ class ApiDataService implements BaseService {
    */
   async update(student: Student): Promise<Student> {
     try {
-      const normalizedStudent = {
-        ...student,
-        avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      };
+      // const normalizedStudent = {
+      //   ...student,
+      //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
+      // };
       const response = await fetch(`${this.baseUrl}/${student.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(normalizedStudent),
+        body: JSON.stringify(student),
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
@@ -350,4 +355,3 @@ DataServiceEnvironment.create().then((service) => {
   (window as any).dataService = service;
 });
 export const dataService = (window as any).dataService;
-
