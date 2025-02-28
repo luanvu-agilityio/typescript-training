@@ -14,17 +14,11 @@ interface Environment {
 const environment: Environment = {
   localApiUrl: 'http://localhost:3000',
   remoteApiUrl: 'https://crud-api-vuea.onrender.com',
-  baseImageUrl: 'http://localhost:3000',
+  baseImageUrl: 'https://typescript-training-jz30.onrender.com',
 };
 
 /**
  * Normalizes the avatar url to ensure it is a full url
- * @param avatar - the avatar url to normalize
- * @param baseUrl - the base url to use if avatar url is relative
- * @returns the normalized avatar url
- */
-/**
- * Normalizes the avatar url to ensure it is properly accessible
  * @param avatar - the avatar url to normalize
  * @param baseUrl - the base url to use if avatar url is relative
  * @returns the normalized avatar url
@@ -38,7 +32,6 @@ const normalizeAvatarUrl = (avatar: string, baseUrl: string): string => {
 
   return `${baseUrl}/${fileName}`;
 };
-
 
 export interface BaseService {
   getAll(): Promise<Student[]>;
@@ -156,7 +149,7 @@ class ApiDataService implements BaseService {
   private readonly baseImageUrl: string;
   constructor(baseUrl: string) {
     this.baseUrl = `${baseUrl}/students`;
-    this.baseImageUrl = baseUrl;
+    this.baseImageUrl = environment.baseImageUrl;
   }
 
   /**
@@ -305,7 +298,7 @@ export class DataServiceEnvironment {
       const response = await fetch(`${environment.localApiUrl}/students`);
       if (response.ok) {
         console.log('Using local json server');
-        environment.baseImageUrl = environment.localApiUrl;
+
         return new ApiDataService(environment.localApiUrl);
       }
     } catch (error) {
@@ -317,14 +310,15 @@ export class DataServiceEnvironment {
       const response = await fetch(`${environment.remoteApiUrl}/students`);
       if (response.ok) {
         console.log('Using remote Json server');
-        environment.baseImageUrl = environment.remoteApiUrl;
+
         return new ApiDataService(environment.remoteApiUrl);
       }
     } catch (error) {
       console.log('Remote json server is not available');
     }
-    environment.baseImageUrl = 'http://localhost:1234';
-    return new ApiDataService(environment.baseImageUrl);
+
+    // Only use this as fallback for API URL, not for image base URL
+    return new ApiDataService(environment.remoteApiUrl);
   }
 }
 
@@ -347,3 +341,4 @@ DataServiceEnvironment.create().then((service) => {
   (window as any).dataService = service;
 });
 export const dataService = (window as any).dataService;
+
