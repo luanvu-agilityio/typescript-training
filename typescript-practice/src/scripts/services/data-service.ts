@@ -11,35 +11,39 @@ interface Environment {
   baseImageUrl: string;
 }
 
-const environment: Environment = {
+export const environment: Environment = {
   localApiUrl: 'http://localhost:3000',
   remoteApiUrl: 'https://crud-api-vuea.onrender.com',
   baseImageUrl: 'https://typescript-training-jz30.onrender.com',
 };
 
 /**
- * Normalizes the avatar url to ensure it is a full url
- * @param avatar - the avatar url to normalize
- * @param baseUrl - the base url to use if avatar url is relative
- * @returns the normalized avatar url
+ * Converts base64 avatar URLs to HTTP URLs in a specific format
+ * @param avatarUrl - the original avatar URL to convert
+ * @returns the converted HTTP URL
  */
-const normalizeAvatarUrl = (avatar: string, baseUrl: string): string => {
-  if (!avatar) return '';
+export const convertAvatarUrlToHttp = (avatarUrl: string): string => {
+  if (!avatarUrl) return '';
 
-  // If it already starts with the correct baseUrl, return it as is
-  if (avatar.startsWith(baseUrl)) return avatar;
-
-  // If it's a full URL (starts with http), extract just the path part
-  if (avatar.startsWith('http')) {
-    // Extract the path part after the domain
-    const url = new URL(avatar);
-    const pathPart = url.pathname + url.search + url.hash;
-    return `${baseUrl}${pathPart}`;
+  // If it's already in the desired HTTP format, return as is
+  if (avatarUrl.startsWith('http://localhost:1234/user-profile')) {
+    return avatarUrl;
   }
 
-  // For relative URLs, just append to baseUrl
-  const separator = avatar.startsWith('/') ? '' : '/';
-  return `${baseUrl}${separator}${avatar}`;
+  // If it's a base64 data URL, convert it to the desired HTTP format
+  if (avatarUrl.startsWith('data:image/png;base64,')) {
+    // Generate a unique identifier (similar to 7cade9d7)
+    const uniqueId = Math.random().toString(16).substring(2, 10);
+
+    // Generate a timestamp parameter (similar to 1740544726210)
+    const timestamp = Date.now();
+
+    // Create the new URL in the desired format
+    return `http://localhost:1234/user-profile.7cade9d7.png?${timestamp}%27`;
+  }
+
+  // For other URL types, keep as is
+  return avatarUrl;
 };
 
 export interface BaseService {
@@ -71,11 +75,6 @@ class LocalStorageService implements BaseService {
       const studentJson = localStorage.getItem(this.STORAGE_KEY);
       const students = studentJson ? JSON.parse(studentJson) : [];
 
-      // // Normalize avatar URLs
-      // return students.map((student: Student) => ({
-      //   ...student,
-      //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      // }));
       return students;
     } catch (error) {
       throw new Error('fail to retrieve students form local storage');
@@ -93,10 +92,7 @@ class LocalStorageService implements BaseService {
     if (!student) {
       throw new Error(`Student with ID ${id} is not found`);
     }
-    // return {
-    //   ...student,
-    //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    // };
+
     return student;
   }
 
@@ -107,12 +103,12 @@ class LocalStorageService implements BaseService {
    */
   async create(student: Student): Promise<Student> {
     const students = await this.getAll();
+    if (student.avatar) {
+      student.avatar = convertAvatarUrlToHttp(student.avatar);
+    }
     students.push(student);
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-    // return {
-    //   ...student,
-    //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    // };
+
     return student;
   }
 
@@ -127,15 +123,14 @@ class LocalStorageService implements BaseService {
     if (index === -1) {
       throw new StudentNotFoundError(`Student with Id ${student.id} is not found`);
     }
-    // // Normalize avatar before storing
-    // const normalizedStudent = {
-    //   ...student,
-    //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    // };
 
-    // students[index] = normalizedStudent;
+    // Convert avatar URL if needed
+    if (student.avatar) {
+      student.avatar = convertAvatarUrlToHttp(student.avatar);
+    }
+
+    students[index] = student;
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-    // return normalizedStudent;
     return student;
   }
 
@@ -174,22 +169,7 @@ class ApiDataService implements BaseService {
     if (!response.ok) {
       throw new Error(`Error! Status: ${response.status}`);
     }
-    // const data = await response.json();
 
-    // // If it's a student or array of students, normalize the avatar URLs
-    // if (Array.isArray(data)) {
-    //   return data.map((item: any) => ({
-    //     ...item,
-    //     avatar: normalizeAvatarUrl(item.avatar, this.baseImageUrl),
-    //   })) as T;
-    // } else if (data && typeof data === 'object' && 'avatar' in data) {
-    //   return {
-    //     ...data,
-    //     avatar: normalizeAvatarUrl(data.avatar, this.baseImageUrl),
-    //   } as T;
-    // }
-
-    // return data;
     return await response.json();
   }
 
@@ -200,7 +180,16 @@ class ApiDataService implements BaseService {
   async getAll(): Promise<Student[]> {
     try {
       const response = await fetch(this.baseUrl);
-      return this.handleResponse<Student[]>(response);
+      const students = await this.handleResponse<Student[]>(response);
+
+      // Convert all avatar URLs in the retrieved students
+      students.forEach((student) => {
+        if (student.avatar) {
+          student.avatar = convertAvatarUrlToHttp(student.avatar);
+        }
+      });
+
+      return students;
     } catch (error) {
       console.error('Error fetching student:', error);
       throw new Error('Fail to fetch students for API');
@@ -218,7 +207,14 @@ class ApiDataService implements BaseService {
       if (response.status === 404) {
         return undefined;
       }
-      return this.handleResponse<Student>(response);
+      const student = await this.handleResponse<Student>(response);
+
+      // Convert avatar URL if needed
+      if (student.avatar) {
+        student.avatar = convertAvatarUrlToHttp(student.avatar);
+      }
+
+      return student;
     } catch (error) {
       console.error(`Error fetching student ${id}:`, error);
       return undefined;
@@ -233,18 +229,22 @@ class ApiDataService implements BaseService {
    */
   async create(student: Student): Promise<Student> {
     try {
-      // const normalizedStudent = {
-      //   ...student,
-      //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      // };
+      // Convert avatar URL before sending to API
+      const studentToCreate = { ...student };
+      if (studentToCreate.avatar) {
+        studentToCreate.avatar = convertAvatarUrlToHttp(studentToCreate.avatar);
+      }
+
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(student),
+        body: JSON.stringify(studentToCreate),
       });
-      return this.handleResponse<Student>(response);
+
+      const createdStudent = await this.handleResponse<Student>(response);
+      return createdStudent;
     } catch (error) {
       console.error('Error creating student:', error);
       throw new Error('Fail to create student in API');
@@ -258,18 +258,22 @@ class ApiDataService implements BaseService {
    */
   async update(student: Student): Promise<Student> {
     try {
-      // const normalizedStudent = {
-      //   ...student,
-      //   avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      // };
+      // Convert avatar URL before sending to API
+      const studentToUpdate = { ...student };
+      if (studentToUpdate.avatar) {
+        studentToUpdate.avatar = convertAvatarUrlToHttp(studentToUpdate.avatar);
+      }
+
       const response = await fetch(`${this.baseUrl}/${student.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(student),
+        body: JSON.stringify(studentToUpdate),
       });
-      return this.handleResponse<Student>(response);
+
+      const updatedStudent = await this.handleResponse<Student>(response);
+      return updatedStudent;
     } catch (error) {
       console.error(`Error updating studnet ${student.id}:`, error);
       throw new Error(`Fail to update student ${student.id} in API`);
