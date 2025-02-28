@@ -26,11 +26,20 @@ const environment: Environment = {
 const normalizeAvatarUrl = (avatar: string, baseUrl: string): string => {
   if (!avatar) return '';
 
-  if (avatar.startsWith('http')) return avatar;
+  // If it already starts with the correct baseUrl, return it as is
+  if (avatar.startsWith(baseUrl)) return avatar;
 
-  const fileName = avatar.includes('/') ? avatar.split('/').pop() : avatar;
+  // If it's a full URL (starts with http), extract just the path part
+  if (avatar.startsWith('http')) {
+    // Extract the path part after the domain
+    const url = new URL(avatar);
+    const pathPart = url.pathname + url.search + url.hash;
+    return `${baseUrl}${pathPart}`;
+  }
 
-  return `${baseUrl}/${fileName}`;
+  // For relative URLs, just append to baseUrl
+  const separator = avatar.startsWith('/') ? '' : '/';
+  return `${baseUrl}${separator}${avatar}`;
 };
 
 export interface BaseService {
