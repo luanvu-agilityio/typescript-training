@@ -121,6 +121,7 @@ class ApiDataService implements BaseService {
   constructor(baseUrl: string) {
     this.baseUrl = `${baseUrl}/students`;
     this.baseImageUrl = environment.baseImageUrl;
+    this.baseImageUrl = environment.baseImageUrl;
   }
 
   /**
@@ -182,6 +183,7 @@ class ApiDataService implements BaseService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(student),
+        body: JSON.stringify(student),
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
@@ -202,6 +204,7 @@ class ApiDataService implements BaseService {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(student),
         body: JSON.stringify(student),
       });
       return this.handleResponse<Student>(response);
@@ -253,7 +256,32 @@ export class DataServiceEnvironment {
     } catch (error) {
       console.log('Local json server not available');
     }
+    // Test if we are at local json server
+    try {
+      const response = await fetch(`${environment.localApiUrl}/students`);
+      if (response.ok) {
+        console.log('Using local json server');
 
+        return new ApiDataService(environment.localApiUrl);
+      }
+    } catch (error) {
+      console.log('Local json server not available');
+    }
+
+    // Try remote Json server
+    try {
+      const response = await fetch(`${environment.remoteApiUrl}/students`);
+      if (response.ok) {
+        console.log('Using remote Json server');
+
+        return new ApiDataService(environment.remoteApiUrl);
+      }
+    } catch (error) {
+      console.log('Remote json server is not available');
+    }
+
+    // Only use this as fallback for API URL, not for image base URL
+    return new ApiDataService(environment.remoteApiUrl);
     // Try remote Json server
     try {
       const response = await fetch(`${environment.remoteApiUrl}/students`);
