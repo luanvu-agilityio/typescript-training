@@ -1,4 +1,4 @@
-import { StudentNotFoundError } from '../controllers/controller';
+import { StudentNotFoundError } from '../helpers/error';
 import Student from '../interfaces/student';
 
 /**
@@ -14,23 +14,7 @@ interface Environment {
 const environment: Environment = {
   localApiUrl: 'http://localhost:3000',
   remoteApiUrl: 'https://crud-api-vuea.onrender.com',
-  baseImageUrl: 'http://localhost:3000',
-};
-
-/**
- * Normalizes the avatar url to ensure it is a full url
- * @param avatar - the avatar url to normalize
- * @param baseUrl - the base url to use if avatar url is relative
- * @returns the normalized avatar url
- */
-const normalizeAvatarUrl = (avatar: string, baseUrl: string): string => {
-  if (!avatar) return '';
-
-  if (avatar.startsWith('http')) return avatar;
-
-  const fileName = avatar.includes('/') ? avatar.split('/').pop() : avatar;
-
-  return `${baseUrl}/${fileName}`;
+  baseImageUrl: 'https://typescript-training-jz30.onrender.com',
 };
 
 export interface BaseService {
@@ -62,11 +46,7 @@ class LocalStorageService implements BaseService {
       const studentJson = localStorage.getItem(this.STORAGE_KEY);
       const students = studentJson ? JSON.parse(studentJson) : [];
 
-      // Normalize avatar URLs
-      return students.map((student: Student) => ({
-        ...student,
-        avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      }));
+      return students;
     } catch (error) {
       throw new Error('fail to retrieve students form local storage');
     }
@@ -83,10 +63,8 @@ class LocalStorageService implements BaseService {
     if (!student) {
       throw new Error(`Student with ID ${id} is not found`);
     }
-    return {
-      ...student,
-      avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    };
+
+    return student;
   }
 
   /**
@@ -98,10 +76,8 @@ class LocalStorageService implements BaseService {
     const students = await this.getAll();
     students.push(student);
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-    return {
-      ...student,
-      avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    };
+
+    return student;
   }
 
   /**
@@ -115,15 +91,10 @@ class LocalStorageService implements BaseService {
     if (index === -1) {
       throw new StudentNotFoundError(`Student with Id ${student.id} is not found`);
     }
-    // Normalize avatar before storing
-    const normalizedStudent = {
-      ...student,
-      avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-    };
 
-    students[index] = normalizedStudent;
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-    return normalizedStudent;
+
+    return student;
   }
 
   /**
@@ -149,7 +120,7 @@ class ApiDataService implements BaseService {
   private readonly baseImageUrl: string;
   constructor(baseUrl: string) {
     this.baseUrl = `${baseUrl}/students`;
-    this.baseImageUrl = baseUrl;
+    this.baseImageUrl = environment.baseImageUrl;
   }
 
   /**
@@ -161,22 +132,8 @@ class ApiDataService implements BaseService {
     if (!response.ok) {
       throw new Error(`Error! Status: ${response.status}`);
     }
-    const data = await response.json();
 
-    // If it's a student or array of students, normalize the avatar URLs
-    if (Array.isArray(data)) {
-      return data.map((item: any) => ({
-        ...item,
-        avatar: normalizeAvatarUrl(item.avatar, this.baseImageUrl),
-      })) as T;
-    } else if (data && typeof data === 'object' && 'avatar' in data) {
-      return {
-        ...data,
-        avatar: normalizeAvatarUrl(data.avatar, this.baseImageUrl),
-      } as T;
-    }
-
-    return data;
+    return await response.json();
   }
 
   /**
@@ -219,16 +176,12 @@ class ApiDataService implements BaseService {
    */
   async create(student: Student): Promise<Student> {
     try {
-      const normalizedStudent = {
-        ...student,
-        avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      };
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(normalizedStudent),
+        body: JSON.stringify(student),
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
@@ -244,16 +197,12 @@ class ApiDataService implements BaseService {
    */
   async update(student: Student): Promise<Student> {
     try {
-      const normalizedStudent = {
-        ...student,
-        avatar: normalizeAvatarUrl(student.avatar, this.baseImageUrl),
-      };
       const response = await fetch(`${this.baseUrl}/${student.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(normalizedStudent),
+        body: JSON.stringify(student),
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
@@ -293,54 +242,32 @@ export class DataServiceEnvironment {
    *
    */
   static async create(): Promise<BaseService> {
-    // Suppress console errors temporarily
-    const originalConsoleLog = console.log;
-    const originalConsoleError = console.error;
-
-    // Only log the final decision or error
-    let finalMessage = '';
-    console.log = (message) => {
-      finalMessage = message;
-    };
-    console.error = () => {};
-
+    // Test if we are at local json server
     try {
-      // Test if we are at local json server
-      try {
-        const response = await fetch(`${environment.localApiUrl}/students`);
-        if (response.ok) {
-          finalMessage = 'Using local json server';
-          environment.baseImageUrl = environment.localApiUrl;
-          return new ApiDataService(environment.localApiUrl);
-        }
-      } catch (error) {
-        // Silently fail
+      const response = await fetch(`${environment.localApiUrl}/students`);
+      if (response.ok) {
+        console.log('Using local json server');
+
+        return new ApiDataService(environment.localApiUrl);
       }
-
-      // Try remote Json server
-      try {
-        const response = await fetch(`${environment.remoteApiUrl}/students`);
-        if (response.ok) {
-          finalMessage = 'Using remote Json server';
-          environment.baseImageUrl = environment.remoteApiUrl;
-          return new ApiDataService(environment.remoteApiUrl);
-        }
-      } catch (error) {
-        // Silently fail
-      }
-
-      // No service available
-      finalMessage = 'Warning: No API servers available, falling back to local implementation';
-      environment.baseImageUrl = 'http://localhost:1234';
-      return new LocalStorageService(environment.baseImageUrl);
-    } finally {
-      // Restore original console functions
-      console.log = originalConsoleLog;
-      console.error = originalConsoleError;
-
-      // Log the final result
-      console.log(finalMessage);
+    } catch (error) {
+      console.log('Local json server not available');
     }
+
+    // Try remote Json server
+    try {
+      const response = await fetch(`${environment.remoteApiUrl}/students`);
+      if (response.ok) {
+        console.log('Using remote Json server');
+
+        return new ApiDataService(environment.remoteApiUrl);
+      }
+    } catch (error) {
+      console.log('Remote json server is not available');
+    }
+
+    // Only use this as fallback for API URL, not for image base URL
+    return new ApiDataService(environment.remoteApiUrl);
   }
 }
 

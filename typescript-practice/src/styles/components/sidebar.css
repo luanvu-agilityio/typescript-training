@@ -1,20 +1,20 @@
 /* Sidebar */
 .sidebar {
-  width: 27rem;
-  background-color: var(--light-brown-color);
-  padding: 20px;
-  transition: all 0.3s ease;
   position: relative;
+  width: 27rem;
+  padding: 20px;
+  background-color: var(--light-brown-color);
+  transition: all 0.3s ease;
 }
 
 .sidebar__title {
+  padding-left: 2rem;
+  margin-bottom: 5.4rem;
   font-size: var(--font-size-20);
   font-weight: var(--font-weight-bold);
   color: var(--black-color);
   text-align: center;
   text-transform: uppercase;
-  padding-left: 2rem;
-  margin-bottom: 5.4rem;
 }
 
 .sidebar__title::before {
@@ -22,6 +22,7 @@
   position: absolute;
   left: 3rem;
   top: 3rem;
+
   height: 2rem;
   width: 0.4rem;
   background-color: #f8d442;
@@ -32,9 +33,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 4rem;
   padding-bottom: 4rem;
-  gap: 0.5rem;
 }
 
 .sidebar__profile-image {
@@ -72,6 +73,7 @@
   display: flex;
   align-items: center;
   padding: 12px 64px 12px 56px;
+
   margin-bottom: 10px;
   border-radius: 8px;
   cursor: pointer;
@@ -152,16 +154,17 @@
 }
 
 .sidebar__logout {
-  margin-top: auto;
-  padding: 1rem 2rem;
-  margin-left: 1.5rem;
+  position: absolute;
+  bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 20rem;
+
+  margin-top: auto;
+  margin-left: 1.5rem;
+  padding: 1rem 2rem;
   cursor: pointer;
-  position: absolute;
-  bottom: 20px;
   color: var(--black-color);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-regular);
@@ -183,12 +186,13 @@
 
 .sidebar-toggle {
   z-index: 1000;
-  display: none;
   position: fixed;
+  display: none;
   bottom: 8rem;
   right: 2rem;
   width: 5rem;
   height: 5rem;
+
   border-radius: 50%;
   background-color: var(--orange-color);
   border: none;
@@ -233,15 +237,16 @@
   }
 
   .sidebar {
-    width: 100%;
-    padding: 1.5rem;
-    max-height: 8rem;
-    overflow: hidden;
+    z-index: 100;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+
+    width: 100%;
+    padding: 1.5rem;
+    max-height: 8rem;
+    overflow: hidden;
     border-top: 1px solid #e0e0e0;
   }
 
@@ -258,20 +263,21 @@
   .sidebar__nav {
     display: flex;
     flex-direction: row;
+    justify-content: space-around;
+
     width: 100%;
-    overflow-x: auto;
     padding: 10px 0;
     margin: 0;
-    justify-content: space-around;
     margin-bottom: 2rem;
+    overflow-x: auto;
   }
 
   .sidebar__nav-item {
-    flex-direction: column;
-    padding: 0.8rem;
-    margin: 0 0.5rem;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+    margin: 0 0.5rem;
+    padding: 0.8rem;
     min-width: 6rem;
   }
 

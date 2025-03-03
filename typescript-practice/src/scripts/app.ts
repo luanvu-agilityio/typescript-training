@@ -46,11 +46,10 @@ export default class App {
 
       // Initialize the controller with the data service and bound handler methods
       this.studentController = new StudentController(dataService, {
-        handleDelete: (id) => this.handleDelete(id),
-        handleEdit: (id) => this.handleEdit(id),
-        handleAddNew: () => this.handleAddNew(),
-        handleSortButtonClick: () => this.handleSortButtonClick(),
-        handleSortFieldChange: (field) => this.handleSortFieldChange(field),
+        handleDelete: this.handleDelete,
+        handleEdit: this.handleEdit,
+        handleAddNew: this.handleAddNew,
+        handleSortFieldChange: this.handleSortFieldChange,
       });
 
       await this.initializeCore();
@@ -115,17 +114,6 @@ export default class App {
       this.studentController.handleAddNew();
     } catch (error) {
       console.error('Error adding new student:', error);
-    }
-  }
-
-  /**
-   * Handler for sort button clicks
-   */
-  private handleSortButtonClick(): void {
-    try {
-      this.sortManager.handleSortButtonClick();
-    } catch (error) {
-      console.error('Error handling sort button click:', error);
     }
   }
 

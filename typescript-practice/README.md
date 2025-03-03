@@ -52,9 +52,9 @@ The project showcases practical applications of TypeScript while delivering esse
 
 ## Prerequisite
 
-- Visual Studio Code latest version 1.97.2
+- Visual Studio Code version [1.97.2]
 
-- Node.js v20.18.1
+- Node.js [v20.18.1]
 
 - Parcel bundler version [2.13.3]
 
@@ -64,17 +64,17 @@ The project showcases practical applications of TypeScript while delivering esse
 
 - TypeScript version [5.7.3]
 
-- Json server version []
+- Json server version [0.17.4]
 
 - Extensions: editorconfig, Pixel Perfect, Live Server, Prettier, ESlint
 
 ## Test environments
 
-- Chrome
+- Chrome version [133.0.6943.127], version [134.0.6998.33]
 
-- Firefox
+- Firefox version [135.0.1], version [134.0.2]
 
-- Opera
+- Safari verion [17.5], version [18.3]
 
 ## Folder's structure
 
@@ -122,12 +122,16 @@ The project showcases practical applications of TypeScript while delivering esse
 | git checkout feat/practice                                                | Checkout to branch feat/practice |
 | cd typescript-practice                                                    | Move to folder                   |
 | npm install                                                               | Install dependencies             |
-| npm run start                                                             | Run the parcel bundler           |
-| Alternatively, use live server extension to render images properly        |
+| npm run dev                                                               | Run the parcel bundler           |
+    
 
 <b>Notes:<b>
 
 - Open the browser (with parcel) at: http://localhost:1234
+
+- Database running at http://localhost:3000
+
+- Alternatively, see the deployment link on render.com at the end of this document for more details
 
 ## Contributing
 
@@ -141,7 +145,7 @@ I welcome any and all contribution! If you have found or encountered any bugs or
 
 [Practice plan](https://docs.google.com/document/d/1W7hQm18-0t09LbQWPSMAYLWqy4vWOCqL/edit)
 
-[Vercel] to be updated
+[Deployment link](https://typescript-training-jz30.onrender.com)
 
 ###
 

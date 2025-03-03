@@ -9,22 +9,50 @@ import { StudentSort, SortConfig, SortField, SortOrder } from '../helpers/studen
 import { LoadingSpinner } from '../helpers/loading-spinner';
 import { Pagination } from '../helpers/pagination';
 import { BaseService } from '../services/data-service';
-import { StorageError, StudentNotFoundError, ValidationError } from '../helpers/error';
+
 /**
- * BaseController class provides common functionality for handling errors and loading spinner.
+ * Custom error classes
  */
-abstract class BaseController {
-  protected loadingSpinner: LoadingSpinner;
-
-  constructor() {
-    this.loadingSpinner = LoadingSpinner.getInstance();
+export class StudentError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StudentError';
   }
+}
 
+export class StudentNotFoundError extends StudentError {
+  constructor(id: string) {
+    super(`Student with ID ${id} not found`);
+    this.name = 'StudentNotFoundError';
+  }
+}
+
+export class ValidationError extends StudentError {
+  public errors: Record<string, string>;
+
+  constructor(errors: Record<string, string>) {
+    super('Validation failed');
+    this.name = 'ValidationError';
+    this.errors = errors;
+  }
+}
+
+export class StorageError extends StudentError {
+  constructor(message: string) {
+    super(`Storage operation failed: ${message}`);
+    this.name = 'StorageError';
+  }
+}
+
+/**
+ * ErrorHandler class handles different types of errors
+ */
+export class ErrorHandler {
   /**
    * Handles errors by displaying appropriate messages and logging the error.
    * @param error - The error object.
    */
-  protected handleError(error: unknown): void {
+  public handleError(error: unknown): void {
     const errorMessage = this.getErrorMessage(error);
     console.error('Error:', error);
 
@@ -44,7 +72,7 @@ abstract class BaseController {
    * @param error - The error object.
    * @returns The error message.
    */
-  protected getErrorMessage(error: unknown): string {
+  private getErrorMessage(error: unknown): string {
     if (error instanceof Error) {
       return error.message;
     }
@@ -214,50 +242,265 @@ export class SearchManager {
 }
 
 /**
- * StudentController class manages student data and interactions between the model, view, and storage.
+ * StudentDataService handles all data-related operations
  */
-export class StudentController extends BaseController {
+export class StudentDataService {
+  constructor(
+    private readonly dataService: BaseService,
+    private errorHandler: ErrorHandler,
+  ) {}
+
+  /**
+   * Retrieves all students from storage.
+   * @returns An array of students.
+   */
+  public async getAllStudents(): Promise<Student[]> {
+    try {
+      return await this.dataService.getAll();
+    } catch (error) {
+      throw new StorageError(`Failed to retrieve students: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Retrieves a student by ID from storage.
+   * @param id - The ID of the student to retrieve.
+   * @returns The student object if found.
+   */
+  public async getStudentById(id: string): Promise<Student> {
+    try {
+      const student = await this.dataService.getById(id);
+      if (!student) {
+        throw new StudentNotFoundError(id);
+      }
+      return student;
+    } catch (error) {
+      throw new StorageError(`Failed to retrieve student: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Creates a new student
+   * @param studentData - The data for the new student
+   */
+  public async createStudent(studentData: Partial<Student>): Promise<void> {
+    try {
+      const newStudent = new StudentModel(studentData);
+      await this.dataService.create(newStudent);
+    } catch (error) {
+      throw new StorageError(`Failed to create student: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Updates an existing student
+   * @param studentData - The updated student data
+   */
+  public async updateStudent(studentData: Partial<Student>): Promise<void> {
+    try {
+      if (!studentData.id) {
+        throw new Error('Student ID is required for update');
+      }
+
+      const existingStudent = await this.getStudentById(studentData.id);
+      const updatedStudent = new StudentModel({
+        ...existingStudent,
+        ...studentData,
+      });
+
+      await this.dataService.update(updatedStudent);
+    } catch (error) {
+      if (error instanceof StudentNotFoundError) {
+        throw error;
+      }
+      throw new StorageError(`Failed to update student: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Deletes a student
+   * @param id - The ID of the student to delete
+   */
+  public async deleteStudent(id: string): Promise<void> {
+    try {
+      await this.dataService.delete(id);
+    } catch (error) {
+      if (error instanceof StudentNotFoundError) {
+        throw error;
+      }
+      throw new StorageError(`Failed to delete student: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Gets error message from error object
+   */
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return String(error);
+  }
+}
+
+/**
+ * FormHandler manages form-related operations
+ */
+export class FormHandler {
+  constructor(
+    private formView: StudentFormView,
+    private dataService: StudentDataService,
+    private errorHandler: ErrorHandler,
+    private onSuccessfulSave: () => Promise<void>,
+  ) {}
+
+  /**
+   * Shows form for adding new student
+   */
+  public showAddForm(): void {
+    try {
+      this.formView.showAddForm();
+    } catch (error) {
+      this.errorHandler.handleError(error);
+    }
+  }
+
+  /**
+   * Shows form for editing student
+   * @param id - ID of student to edit
+   */
+  public async showEditForm(id: string): Promise<void> {
+    try {
+      const student = await this.dataService.getStudentById(id);
+      this.formView.showEditForm(student);
+    } catch (error) {
+      this.errorHandler.handleError(error);
+    }
+  }
+
+  /**
+   * Handles save action
+   * @param studentData - Data to save
+   */
+  public async handleSave(studentData: Partial<Student>): Promise<void> {
+    const loadingSpinner = LoadingSpinner.getInstance();
+    try {
+      loadingSpinner.show();
+
+      // Validate form data
+      const allStudents = await this.dataService.getAllStudents();
+      const { isValid, errors } = Validator.validateForm(studentData, allStudents);
+      if (!isValid) {
+        throw new ValidationError(errors);
+      }
+
+      // Create or update student
+      if (studentData.id) {
+        await this.dataService.updateStudent(studentData);
+        ToastHandler.show('success', 'Success', 'Student updated successfully');
+      } else {
+        await this.dataService.createStudent(studentData);
+        ToastHandler.show('success', 'Success', 'Student added successfully');
+      }
+
+      // Hide form and refresh data
+      this.formView.hide();
+      await this.onSuccessfulSave();
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        this.formView.showErrors(error.errors);
+      } else {
+        this.errorHandler.handleError(error);
+      }
+    } finally {
+      loadingSpinner.hide();
+    }
+  }
+
+  /**
+   * Handles cancel action
+   */
+  public handleCancel(): void {
+    try {
+      this.formView.hide();
+    } catch (error) {
+      this.errorHandler.handleError(error);
+    }
+  }
+}
+
+/**
+ * UIManager handles UI-related operations
+ */
+export class UIManager {
+  /**
+   * Initializes sidebar toggle functionality
+   */
+  public initializeSidebarToggle(): void {
+    const sidebarToggleButton = document.querySelector('#sidebarToggle');
+    const sidebar = document.querySelector('.sidebar') as HTMLElement;
+
+    if (sidebarToggleButton && sidebar) {
+      sidebarToggleButton.addEventListener('click', () => {
+        sidebar.classList.toggle('expanded');
+      });
+    }
+  }
+}
+
+/**
+ * StudentController class coordinates between different components
+ */
+export class StudentController {
   private allStudents: Student[] = [];
-  // Core properties
-  private readonly dataService: BaseService;
-  private readonly listView: StudentListView;
-  private readonly formView: StudentFormView;
-  private currentSearchQuery: string = '';
+  private loadingSpinner: LoadingSpinner;
+  private errorHandler: ErrorHandler;
+  private dataService: StudentDataService;
+  private formHandler: FormHandler;
+  private uiManager: UIManager;
+
   // Manager classes
   private readonly paginationManager: PaginationManager;
   private readonly sortManager: SortManager;
   private readonly searchManager: SearchManager;
-  private sortDropdownHandler: SortDropdownHandler;
-  constructor(
-    dataService: BaseService,
-    handlers: {
-      handleDelete: (id: string) => void;
-      handleEdit: (id: string) => void;
-      handleAddNew: () => void;
-      handleSortFieldChange: (field: SortField) => void;
-    },
-  ) {
-    super();
-    this.dataService = dataService;
+  private readonly sortDropdownHandler: SortDropdownHandler;
+
+  // Views
+  private readonly listView: StudentListView;
+  private readonly formView: StudentFormView;
+
+  constructor(baseService: BaseService) {
+    // Initialize core components
+    this.loadingSpinner = LoadingSpinner.getInstance();
+    this.errorHandler = new ErrorHandler();
+    this.dataService = new StudentDataService(baseService, this.errorHandler);
+    this.uiManager = new UIManager();
 
     // Initialize managers with their callback functions
     this.paginationManager = new PaginationManager(this.updateDisplayedStudents.bind(this));
     this.sortManager = new SortManager(this.handleSort.bind(this));
     this.searchManager = new SearchManager(this.handleSearch.bind(this));
 
-    // Initialize views with their event handlers
+    // Initialize views
     this.listView = new StudentListView(
       this.handleDelete.bind(this),
       this.handleEdit.bind(this),
       this.handleAddNew.bind(this),
-
       (field: SortField) => this.sortManager.handleSortFieldChange(field),
     );
 
     this.formView = new StudentFormView(
       this.handleSave.bind(this),
       this.handleCancel.bind(this),
-      async () => await this.getAllStudents(),
+      async () => await this.dataService.getAllStudents(),
+    );
+
+    // Initialize form handler
+    this.formHandler = new FormHandler(
+      this.formView,
+      this.dataService,
+      this.errorHandler,
+      this.renderStudents.bind(this),
     );
 
     // Initialize sort dropdown handler
@@ -272,117 +515,77 @@ export class StudentController extends BaseController {
     }, this.sortManager.getCurrentSort());
   }
 
-  /**---------------------
-   * PUBLIC METHODS
-   * ---------------------
-   */
-
   /**
-   * Loads the initial list of students and renders them in the list view.
+   * Loads the initial list of students and renders them
    */
-  async loadInitialStudents(): Promise<void> {
+  public async loadInitialStudents(): Promise<void> {
     try {
       this.loadingSpinner.show();
-      this.allStudents = await this.getAllStudents();
-      this.renderStudents();
+      this.allStudents = await this.dataService.getAllStudents();
+      await this.renderStudents();
     } catch (error) {
-      this.handleError(error);
+      this.errorHandler.handleError(error);
     } finally {
       this.loadingSpinner.hide();
     }
   }
 
   /**
-   * Handles search query input.
-   * @param query - The search query.
+   * Handles search query
+   * @param query - Search query
    */
   public async handleSearchingQuery(query: string): Promise<void> {
     try {
-      this.currentSearchQuery = query;
-      const allStudents = await this.getAllStudents();
+      this.loadingSpinner.show();
+      const allStudents = await this.dataService.getAllStudents();
       this.searchManager.searchStudents(query, allStudents);
     } catch (error) {
-      this.handleError(error);
+      this.errorHandler.handleError(error);
     } finally {
       this.loadingSpinner.hide();
     }
   }
 
   /**
-   * Updates the displayed students in the list view.
-   * @param students - The array of students to display.
+   * Updates displayed students
+   * @param students - Students to display
    */
   public updateDisplayedStudents(students: Student[]): void {
     this.listView.renderStudentTable(students);
   }
 
   /**
-   * Handles action of adding new student by showing add student form
+   * Handles adding new student
    */
   public handleAddNew(): void {
-    try {
-      this.formView.showAddForm();
-    } catch (error) {
-      this.handleError(error);
-    }
+    this.formHandler.showAddForm();
   }
 
   /**
-   *  Handles action of editing student by showing edit student form
-   * @param id - id of student to edit
+   * Handles editing student
+   * @param id - ID of student to edit
    */
   public async handleEdit(id: string): Promise<void> {
-    try {
-      const student = await this.getStudentById(id);
-      if (!student) {
-        throw new StudentNotFoundError(id);
-      }
-      this.formView.showEditForm(student);
-    } catch (error) {
-      this.handleError(error);
-    }
+    await this.formHandler.showEditForm(id);
   }
 
   /**
-   * Handles action of deleting a student by showing the confirmation dialog
-   * @param id - the id of student to delete
+   * Handles deleting student
+   * @param id - ID of student to delete
    */
-  public async handleDelete(id: string): Promise<void> {
+  public handleDelete(id: string): void {
     try {
-      const student = await this.getStudentById(id);
-      if (!student) {
-        throw new StudentNotFoundError(id);
-      }
       ToastHandler.showConfirmation(
         'Confirm Deletion',
-        `Are you sure you want to delete this student: ${student.name}?`,
+        'Are you sure you want to delete this student?',
         async () => {
           try {
             this.loadingSpinner.show();
-            await this.deleteStudent(id);
-            // Get current pagination state before refresh
-            const { page, itemsPerPage } = this.paginationManager.getCurrentState();
-
-            // Get updated student list
-            const updatedStudents = await this.getAllStudents();
-
-            // Calculate total page after deletion
-            const totalPages = Math.max(1, Math.ceil(updatedStudents.length / itemsPerPage));
-
-            // if current page is greater that total page after deletion, go to previous page
-            if (page > totalPages && page > 1) {
-              this.paginationManager.handlePageChange(page - 1, itemsPerPage);
-            }
-
-            if (this.currentSearchQuery) {
-              await this.handleSearchingQuery(this.currentSearchQuery);
-            } else {
-              await this.renderStudents(true);
-            }
-
+            await this.dataService.deleteStudent(id);
+            await this.renderStudents(true);
             ToastHandler.show('success', 'Success', 'Student deleted successfully');
           } catch (error) {
-            this.handleError(error);
+            this.errorHandler.handleError(error);
           } finally {
             this.loadingSpinner.hide();
           }
@@ -390,37 +593,42 @@ export class StudentController extends BaseController {
         () => {},
       );
     } catch (error) {
-      this.handleError(error);
+      this.errorHandler.handleError(error);
     }
   }
 
-  // Add a getter for the list view
+  /**
+   * Handles saving student
+   * @param studentData - Student data to save
+   */
+  private async handleSave(studentData: Partial<Student>): Promise<void> {
+    await this.formHandler.handleSave(studentData);
+  }
+
+  /**
+   * Handles canceling form
+   */
+  private handleCancel(): void {
+    this.formHandler.handleCancel();
+  }
+
+  /**
+   * Gets the list view
+   */
   public getListView(): StudentListView {
     return this.listView;
   }
 
   /**
-   * Sidebar toggle function
+   * Initializes the sidebar toggle
    */
   public initializeSidebarToggle(): void {
-    const sidebarToggleButton = document.querySelector('#sidebarToggle');
-    const sidebar = document.querySelector('.sidebar') as HTMLElement;
-
-    if (sidebarToggleButton && sidebar) {
-      sidebarToggleButton.addEventListener('click', (e) => {
-        sidebar.classList.toggle('expanded');
-      });
-    }
+    this.uiManager.initializeSidebarToggle();
   }
 
-  /**--------------------------------
-   * PRIVATE METHODS
-   * ----------------------------------
-   */
-
   /**
-   * Handles sort event.
-   * @param students - The sorted array of students.
+   * Handles sort event
+   * @param students - Sorted students
    */
   private handleSort(students: Student[]): void {
     this.allStudents = students;
@@ -428,27 +636,22 @@ export class StudentController extends BaseController {
   }
 
   /**
-   * Handles search event.
-   * @param students - The filtered array of students.
+   * Handles search event
+   * @param students - Filtered students
    */
   private handleSearch(students: Student[]): void {
-    // Update the allStudents array with the filtered results
     this.allStudents = students;
-
-    // Update pagination with the new dataset (this will trigger UI update)
     this.paginationManager.updateData(this.allStudents);
   }
 
   /**
-   * Renders the list of students in the table body.
-   * @param students - An array of students to render.
-   *  @param preservePage - Whether to preserve current page after update (default: false)
+   * Renders students
+   * @param preservePage - Whether to preserve current page
    */
-
   private async renderStudents(preservePage: boolean = false): Promise<void> {
     try {
       // Get and update all students
-      this.allStudents = await this.getAllStudents();
+      this.allStudents = await this.dataService.getAllStudents();
 
       // Update sort manager's data source
       this.sortManager.updateDataSource(this.allStudents);
@@ -462,153 +665,7 @@ export class StudentController extends BaseController {
       // Update sort UI
       this.sortDropdownHandler.updateSortUI(this.sortManager.getCurrentSort());
     } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /**
-   * Handles the save action for adding or updating a student.
-   * @param studentData - The data of the student to save.
-   */
-  private async handleSave(studentData: Partial<Student>): Promise<void> {
-    try {
-      this.loadingSpinner.show();
-      const allStudents = await this.getAllStudents();
-      const { isValid, errors } = Validator.validateForm(studentData, allStudents);
-      if (!isValid) {
-        throw new ValidationError(errors);
-      }
-
-      if (studentData.id) {
-        await this.updateExistingStudent(studentData);
-      } else {
-        await this.createNewStudent(studentData);
-      }
-
-      this.formView.hide();
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        this.formView.showErrors(error.errors);
-      } else {
-        this.handleError(error);
-      }
-    } finally {
-      this.loadingSpinner.hide();
-    }
-  }
-
-  /**
-   * Handles action of cancelling the form by hiding it
-   */
-  private handleCancel(): void {
-    try {
-      this.formView.hide();
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /**
-   * Creates a new student and adds it to the storage.
-   * @param studentData - The data of the new student.
-   */
-  private async createNewStudent(studentData: Partial<Student>): Promise<void> {
-    try {
-      const newStudent = new StudentModel(studentData);
-      await this.dataService.create(newStudent);
-
-      if (this.currentSearchQuery) {
-        await this.handleSearchingQuery(this.currentSearchQuery);
-      } else {
-        await this.renderStudents();
-      }
-
-      ToastHandler.show('success', 'Success', 'Student added successfully');
-    } catch (error) {
-      throw new StorageError(`Failed to create student: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Updates an existing student in the storage.
-   * @param studentData - The data of the student to update.
-   */
-  private async updateExistingStudent(studentData: Partial<Student>): Promise<void> {
-    try {
-      if (!studentData.id) {
-        throw new Error('Student ID is required for update');
-      }
-
-      const existingStudent = await this.getStudentById(studentData.id);
-      const updatedStudent = new StudentModel({
-        ...existingStudent,
-        ...studentData,
-      });
-
-      await this.dataService.update(updatedStudent);
-
-      if (this.currentSearchQuery) {
-        await this.handleSearchingQuery(this.currentSearchQuery);
-      } else {
-        await this.renderStudents(true);
-      }
-
-      ToastHandler.show('success', 'Success', 'Student updated successfully');
-    } catch (error) {
-      if (error instanceof StudentNotFoundError) {
-        throw error;
-      }
-      throw new StorageError(`Failed to update student: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**---------------------------
-   * DATA ACCESS METHODS
-   * -----------------------------
-   */
-
-  /**
-   * Retrieves all students from storage.
-   * @returns An array of students.
-   */
-  private async getAllStudents(): Promise<Student[]> {
-    try {
-      return await this.dataService.getAll();
-    } catch (error) {
-      throw new StorageError(`Failed to retrieve students: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Retrieves a student by ID from storage.
-   * @param id - The ID of the student to retrieve.
-   * @returns The student object if found, otherwise undefined.
-   */
-  private async getStudentById(id: string): Promise<Student> {
-    try {
-      const student = await this.dataService.getById(id);
-      if (!student) {
-        throw new StudentNotFoundError(id);
-      }
-      return student;
-    } catch (error) {
-      throw new StorageError(`Failed to retrieve student: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Deletes a student from storage
-   * @param id: id of student to delete
-   * @return an array of student excluding the deleted student
-   */
-  private async deleteStudent(id: string): Promise<void> {
-    try {
-      await this.dataService.delete(id);
-    } catch (error) {
-      if (error instanceof StudentNotFoundError) {
-        throw error;
-      }
-      throw new StorageError(`Failed to delete student: ${this.getErrorMessage(error)}`);
+      this.errorHandler.handleError(error);
     }
   }
 }

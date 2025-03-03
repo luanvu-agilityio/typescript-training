@@ -21,15 +21,16 @@
 }
 
 .students__add-btn {
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-left: var(--space-16);
+
   background-color: var(--orange-color);
   color: var(--white-color);
-  border: none;
-  border-radius: 4px;
-  padding: 10px 15px;
   cursor: pointer;
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-regular);
-  margin-left: var(--space-16);
 }
 
 /* Table */
@@ -41,11 +42,12 @@
 .students__table-header {
   text-align: left;
   padding: 3rem 1rem 1.2rem 0.5rem;
+  border-top: 1px solid var(--input-border-color);
+
   background-color: #f9f9f9;
   color: var(--gray-color);
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-12);
-  border-top: 1px solid var(--input-border-color);
 }
 
 .students__table-header:first-child {
@@ -63,13 +65,6 @@
 .students__table-header:nth-child(4),
 .students__table-header:nth-child(5) {
   max-width: 25rem;
-}
-
-.students__table-header:not(:first-child):not(:last-child):hover {
-  background-color: var(--orange-color);
-  color: var(--black-color);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
 }
 
 .students__table-row {
@@ -158,6 +153,7 @@
   justify-content: center;
   width: 3.2rem;
   height: 3.2rem;
+
   border-radius: 0.4rem;
   border: 1px solid #c1bbeb;
   background: #f8f8f8;
@@ -178,16 +174,17 @@
 }
 
 .sort-dropdown__button {
-  background-color: var(--white-color);
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 1rem 1rem;
-  cursor: pointer;
-  font-size: var(--font-size-14);
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-width: 19rem;
+
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1rem 1rem;
+  background-color: var(--white-color);
+  font-size: var(--font-size-14);
+  cursor: pointer;
 }
 
 .sort-dropdown__button .arrow-down {
@@ -196,16 +193,17 @@
 }
 
 .sort-dropdown__menu {
+  z-index: 100;
   position: absolute;
   top: 107%;
   left: 0;
-  background-color: var(--white-color);
-  border: 1px solid #ccc;
-  border-radius: 4px;
+
   width: 100%;
   min-width: 19rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: var(--white-color);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 100;
 }
 
 .sort-dropdown__item {
@@ -283,8 +281,9 @@
     content: attr(data-label);
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
     left: 1rem;
+    transform: translateY(-50%);
+
     width: 45%;
     padding-right: 10px;
     white-space: nowrap;

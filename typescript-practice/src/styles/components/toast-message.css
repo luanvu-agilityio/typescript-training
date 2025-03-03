@@ -1,8 +1,9 @@
 .toast-container {
+  z-index: 9999;
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 9999;
+
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -32,6 +33,7 @@
   display: flex;
   align-items: center;
   padding: 1.6rem;
+
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   animation: toast-in 0.3s ease forwards;
@@ -60,13 +62,14 @@
 }
 
 .toast__icon {
-  flex-shrink: 0;
-  margin-right: 1.2rem;
-  width: 3rem;
-  height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+
+  margin-right: 1.2rem;
+  width: 3rem;
+  height: 3rem;
 }
 
 .toast--success .toast__icon {
@@ -108,17 +111,18 @@
   position: absolute;
   top: 0.8rem;
   right: 0.8rem;
-  background: none;
-  border: none;
-  color: #999;
-  cursor: pointer;
-  font-size: var(--font-size-22);
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  padding: 0;
   width: 1.6rem;
   height: 1.6rem;
+  border: none;
+  background: none;
+  color: #999;
+  cursor: pointer;
+  font-size: var(--font-size-22);
   opacity: 0.7;
 }
 
@@ -174,10 +178,10 @@
 }
 
 .toast__progress-bar {
+  position: absolute;
   width: 100%;
   height: 3px;
   background-color: rgba(255, 255, 255, 0.7);
-  position: absolute;
   bottom: 0;
   left: 0;
 }
@@ -236,4 +240,122 @@
 .error-message {
   color: var(--color-error);
   font-size: var(--font-size-12);
+}
+
+/* Turn deletion toast to a popup */
+.toast-container {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Confirmation dialog container - centered on screen */
+.confirm-dialog-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* The confirmation dialog itself */
+.confirm-dialog {
+  max-width: 40rem;
+  min-width: 30rem;
+  width: 90%;
+  margin: 0 auto;
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.3);
+  border-radius: 0.8rem;
+  background-color: #fff;
+  pointer-events: auto;
+  z-index: 10000;
+  position: relative;
+}
+
+/* Styling for the confirmation dialog */
+.confirm-dialog--warning .toast__icon {
+  color: var(--orange-color);
+}
+
+/* Background overlay for the confirmation dialog */
+.confirm-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+
+/* Make the confirmation buttons more prominent */
+.confirm-dialog .toast__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.2rem 1.6rem;
+  gap: 1rem;
+}
+
+.confirm-dialog .toast__button--primary,
+.confirm-dialog .toast__button--secondary {
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.5rem;
+  font-weight: var(--font-weight-semibold);
+  transition: background-color 0.2s;
+}
+
+.confirm-dialog .toast__button--primary {
+  background-color: #dc3545;
+  color: var(--white-color);
+}
+
+.confirm-dialog .toast__button--primary:hover {
+  background-color: #c82333;
+}
+
+.confirm-dialog .toast__button--secondary {
+  background-color: #f8f9fa;
+  color: #212529;
+  border: 1px solid #ced4da;
+}
+
+.confirm-dialog .toast__button--secondary:hover {
+  background-color: #e2e6ea;
+}
+
+.confirm-dialog .toast__content {
+  padding: 1.6rem 2rem;
+  font-size: var(--font-size-17);
+}
+
+.confirm-dialog .toast__title {
+  font-size: var(--font-size-20);
+  font-weight: 600;
+}
+
+/* Animation for removing toasts */
+.toast-removing {
+  animation: fade-out 0.5s;
+}
+
+.confirm-dialog-removing {
+  animation: fade-out 0.5s;
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
