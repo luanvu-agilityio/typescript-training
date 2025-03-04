@@ -116,19 +116,12 @@ export class Validator {
     }
 
     // Enrollment number validation
-<<<<<<< HEAD
     if (student.id) {
       if (!this.validateRequired(student.enrollNum)) {
         errors.enrollNum = ERROR_MESSAGES.REQUIRED.ENROLL_NUM;
       } else if (!this.validateEnrollmentNumber(student.enrollNum)) {
         errors.enrollNum = ERROR_MESSAGES.INVALID.ENROLL_NUM;
       }
-=======
-    if (!this.validateRequired(student.enrollNum)) {
-      errors.enrollNum = ERROR_MESSAGES.REQUIRED.ENROLL_NUM;
-    } else if (!this.validateEnrollmentNumber(student.enrollNum)) {
-      errors.enrollNum = ERROR_MESSAGES.INVALID.ENROLL_NUM;
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
     }
 
     // Date of admission validation
