@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { ToastHandler } from '../helpers/toast-handler';
-=======
-import { StudentNotFoundError } from '../helpers/error';
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
 import Student from '../interfaces/student';
 import { ERROR_MESSAGES } from '../constants/request-error-message';
 
@@ -18,10 +14,6 @@ interface Environment {
 const environment: Environment = {
   localApiUrl: 'http://localhost:3000',
   remoteApiUrl: 'https://crud-api-vuea.onrender.com',
-<<<<<<< HEAD
-=======
-  baseImageUrl: 'https://typescript-training-jz30.onrender.com',
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
 };
 
 export abstract class BaseService {
@@ -34,7 +26,6 @@ export abstract class BaseService {
   // Common error handling or utility methods could be added here
   protected handleError(error: unknown, operation: string): Error {
     console.error(`Error during ${operation}:`, error);
-<<<<<<< HEAD
 
     const showErrorToast = (message: string) => {
       ToastHandler.show('error', 'Operation failed', message);
@@ -73,99 +64,6 @@ export abstract class BaseService {
     return error instanceof Error
       ? error
       : new Error(`Unknown error during ${operation}: ${String(error)}`);
-=======
-    return error instanceof Error
-      ? error
-      : new Error(`Unknown error during ${operation}: ${String(error)}`);
-  }
-}
-
-/**
- * LocalStorageService class implements BaseService to manage student data using localStorage
- */
-class LocalStorageService extends BaseService {
-  private readonly STORAGE_KEY = 'all students';
-  private baseImageUrl: string;
-
-  constructor(baseImageUrl: string) {
-    super();
-    this.baseImageUrl = baseImageUrl;
-  }
-
-  /**
-   * Retrieves all students from localStorage
-   * @returns a promise that resolves to an array of students
-   *
-   */
-  async getAll(): Promise<Student[]> {
-    try {
-      const studentJson = localStorage.getItem(this.STORAGE_KEY);
-      const students = studentJson ? JSON.parse(studentJson) : [];
-
-      return students;
-    } catch (error) {
-      throw this.handleError(error, 'retrieving students from local storage');
-    }
-  }
-
-  /**
-   * Retrieves a student by id from localStorage
-   * @param id - the id of student to retrieve
-   * @returns a promise that resolves to the student, or undefined if not found
-   */
-  async getById(id: string): Promise<Student | undefined> {
-    const students = await this.getAll();
-    const student = students.find((s) => s.id === id);
-    if (!student) {
-      throw this.handleError(new StudentNotFoundError(id), 'retrieving student by id');
-    }
-
-    return student;
-  }
-
-  /**
-   * Creates a new student and save it to localStorage
-   * @param student - the student to create
-   * @returns a promise that resolved to created student
-   */
-  async create(student: Student): Promise<Student> {
-    const students = await this.getAll();
-    students.push(student);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-
-    return student;
-  }
-
-  /**
-   * Update the existing student in localStorage
-   * @param student - the student to update
-   * @returns a premise that resolved to the updated student
-   */
-  async update(student: Student): Promise<Student> {
-    const students = await this.getAll();
-    const index = students.findIndex((s) => s.id === student.id);
-    if (index === -1) {
-      throw this.handleError(new StudentNotFoundError(student.id!), 'updating student');
-    }
-
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-
-    return student;
-  }
-
-  /**
-   * Deletes student by id from localStorage
-   * @param id = the id of student to delete
-   * @returns - a promise that resolved when the student is deleted
-   */
-  async delete(id: string): Promise<void> {
-    const students = await this.getAll();
-    const filteredStudents = students.filter((s) => s.id !== id);
-    if (filteredStudents.length === students.length) {
-      throw new StudentNotFoundError(id);
-    }
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredStudents));
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
   }
 }
 
@@ -178,10 +76,6 @@ class ApiDataService extends BaseService {
   constructor(baseUrl: string) {
     super();
     this.baseUrl = `${baseUrl}/students`;
-<<<<<<< HEAD
-=======
-    this.baseImageUrl = environment.baseImageUrl;
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
   }
 
   /**
@@ -191,11 +85,7 @@ class ApiDataService extends BaseService {
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-<<<<<<< HEAD
       throw response;
-=======
-      throw this.handleError(new Error(`Error! Status: ${response.status}`), 'fetching data');
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
     }
 
     return await response.json();
@@ -210,11 +100,7 @@ class ApiDataService extends BaseService {
       const response = await fetch(this.baseUrl);
       return this.handleResponse<Student[]>(response);
     } catch (error) {
-<<<<<<< HEAD
       throw this.handleError(error, ERROR_MESSAGES.FETCH_STUDENTS_ERROR);
-=======
-      throw this.handleError(error, 'fetching all students');
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
     }
   }
 
@@ -254,11 +140,7 @@ class ApiDataService extends BaseService {
       return this.handleResponse<Student>(response);
     } catch (error) {
       console.error('Error creating student:', error);
-<<<<<<< HEAD
       throw this.handleError(error, ERROR_MESSAGES.CREATE_STUDENT_ERROR);
-=======
-      throw this.handleError(error, 'creating student');
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
     }
   }
 
@@ -278,11 +160,7 @@ class ApiDataService extends BaseService {
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
-<<<<<<< HEAD
       throw this.handleError(error, ERROR_MESSAGES.UPDATE_STUDENT_ERROR);
-=======
-      throw this.handleError(error, 'updating student');
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
     }
   }
 
@@ -300,11 +178,7 @@ class ApiDataService extends BaseService {
         throw new Error(`Error! Status: ${response.status}`);
       }
     } catch (error) {
-<<<<<<< HEAD
       throw this.handleError(error, ERROR_MESSAGES.DELETE_STUDENT_ERROR);
-=======
-      throw this.handleError(error, 'deleting student');
->>>>>>> 6e246a3bff7ab432f568d5f4b141972aa1a61841
     }
   }
 }
