@@ -17,11 +17,14 @@ export class ToastHandler {
    * Gets the toast container element, creating it if it doesn't already exist.
    * @returns The toast container element.
    */
-  private static getToastContainer(): HTMLDivElement {
-    let container = document.querySelector('.toast-container') as HTMLDivElement;
+  private static getToastContainer(isConfirmation: boolean = false): HTMLDivElement {
+    // Identify if this is a confirmation (for deletion) dialog or a toast
+    const selector = isConfirmation ? '.confirm-dialog-container' : '.toast-container';
+
+    let container = document.querySelector(selector) as HTMLDivElement;
     if (!container) {
       container = document.createElement('div');
-      container.className = 'toast-container';
+      container.className = isConfirmation ? 'confirm-dialog-container' : 'toast-container';
       document.body.appendChild(container);
     }
     return container;
@@ -43,9 +46,12 @@ export class ToastHandler {
    */
   private static createToastElement(options: ToastOptions): HTMLDivElement {
     const toast = document.createElement('div');
-    toast.className = ` toast toast--${options.type === 'confirm' ? 'info' : options.type}`;
 
-    const iconSrc = options.type === 'confirm' ? 'warning' : options.type;
+    if (options.type === 'confirm') {
+      toast.className = 'confirm-dialog confirm-dialog--warning';
+    } else {
+      toast.className = `toast toast--${options.type}`;
+    }
 
     toast.innerHTML = getToastHTML(
       options,
@@ -78,21 +84,26 @@ export class ToastHandler {
   /**
    * Remove toast element from the DOM
    * @param toast - the toast to remove
+   * @param isConfirmation - whether this is a confirmation dialog
    * @param onComplete - optional callback to execute after the toast is removed
    */
-  private static removeToast(toast: HTMLDivElement, onComplete?: () => void): void {
+  private static removeToast(
+    toast: HTMLDivElement,
+    isConfirmation: boolean = false,
+    onComplete?: () => void,
+  ): void {
     // Clear any existing timeouts attached to this toast
     const timeoutId = parseInt(toast.dataset.timeoutId || '0');
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
 
-    toast.classList.add('toast-removing');
+    toast.classList.add(isConfirmation ? 'confirm-dialog-removing' : 'toast-removing');
 
     setTimeout(() => {
       toast.remove();
 
-      const container = this.getToastContainer();
+      const container = this.getToastContainer(isConfirmation);
       if (container && container.children.length === 0) {
         container.remove();
       }
@@ -105,11 +116,13 @@ export class ToastHandler {
    * @param toast - toast element
    * @param options - the options for the toast
    * @param duration - the duration for the toast
+   * @param isConfirmation - whether this is a confirmation dialog
    */
   private static setupEventListeners(
     toast: HTMLDivElement,
     options: ToastOptions,
     duration: number,
+    isConfirmation: boolean = false,
   ): void {
     //Setup close button
     const closeBtn = toast.querySelector('.toast__close') as HTMLButtonElement;
@@ -119,7 +132,7 @@ export class ToastHandler {
         if (options.type === 'confirm') {
           options.onCancel?.();
         }
-        this.removeToast(toast);
+        this.removeToast(toast, isConfirmation);
       });
     }
 
@@ -130,18 +143,18 @@ export class ToastHandler {
 
       confirmBtn?.addEventListener('click', () => {
         options.onConfirm?.();
-        this.removeToast(toast);
+        this.removeToast(toast, isConfirmation);
       });
 
       cancelBtn?.addEventListener('click', () => {
         options.onCancel?.();
-        this.removeToast(toast);
+        this.removeToast(toast, isConfirmation);
       });
     } else {
       // Set auto remove for non confirmation toast
       const timeoutId = setTimeout(() => {
         if (document.body.contains(toast)) {
-          this.removeToast(toast);
+          this.removeToast(toast, isConfirmation);
         }
       }, duration);
 
@@ -157,7 +170,7 @@ export class ToastHandler {
    * @param message -  the message of the toast
    */
   static show(type: ToastType, title: string, message: string): void {
-    this.createToast({ type, title, message });
+    this.createToast({ type, title, message }, false);
   }
 
   /**
@@ -173,22 +186,38 @@ export class ToastHandler {
     onConfirm: () => void,
     onCancel: () => void,
   ): void {
-    this.createToast({
-      type: 'confirm',
-      title,
-      message,
-      onConfirm,
-      onCancel,
-    });
+    // Create an overlay for the popup
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-dialog-overlay';
+    document.body.appendChild(overlay);
+
+    // Create the toast with the additional overlay reference
+    this.createToast(
+      {
+        type: 'confirm',
+        title,
+        message,
+        onConfirm: () => {
+          onConfirm();
+          overlay.remove();
+        },
+        onCancel: () => {
+          onCancel();
+          overlay.remove();
+        },
+      },
+      true,
+    );
   }
 
   /**
    * Creates and displays a toast notification based on provided options
    * @param options - options for the toast
+   * @param isConfirmation - whether this is a confirmation dialog
    */
-  private static createToast(options: ToastOptions): void {
+  private static createToast(options: ToastOptions, isConfirmation: boolean = false): void {
     const duration = options.duration ?? this.DEFAULT_DURATION;
-    const container = this.getToastContainer();
+    const container = this.getToastContainer(isConfirmation);
     const toast = this.createToastElement(options);
 
     container.appendChild(toast);
@@ -196,6 +225,7 @@ export class ToastHandler {
     if (options.type !== 'confirm') {
       this.setProgressBar(toast, duration);
     }
-    this.setupEventListeners(toast, options, duration);
+
+    this.setupEventListeners(toast, options, duration, isConfirmation);
   }
 }

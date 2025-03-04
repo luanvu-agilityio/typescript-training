@@ -1,8 +1,6 @@
 import { StudentController } from './controllers/controller';
 import { initializeStudentSearch } from '../scripts/helpers/search-handler';
 import { SortField } from './helpers/student-sort';
-import { SortManager } from './controllers/controller';
-import Student from './interfaces/student';
 import { DataServiceEnvironment } from '../scripts/services/data-service';
 
 /**
@@ -10,14 +8,8 @@ import { DataServiceEnvironment } from '../scripts/services/data-service';
  */
 export default class App {
   private studentController!: StudentController;
-  private readonly sortManager: SortManager;
 
   constructor() {
-    // Initialize the sort manager with a callback to handle sorted students
-    this.sortManager = new SortManager((sortedStudents: Student[]) => {
-      // Update the displayed students when sorting occurs
-      this.studentController.updateDisplayedStudents(sortedStudents);
-    });
     this.checkAuth();
   }
 
@@ -46,11 +38,10 @@ export default class App {
 
       // Initialize the controller with the data service and bound handler methods
       this.studentController = new StudentController(dataService, {
-        handleDelete: (id) => this.handleDelete(id),
-        handleEdit: (id) => this.handleEdit(id),
-        handleAddNew: () => this.handleAddNew(),
-        handleSortButtonClick: () => this.handleSortButtonClick(),
-        handleSortFieldChange: (field) => this.handleSortFieldChange(field),
+        handleDelete: this.handleDelete,
+        handleEdit: this.handleEdit,
+        handleAddNew: this.handleAddNew,
+        handleSortFieldChange: this.handleSortFieldChange,
       });
 
       await this.initializeCore();
@@ -65,8 +56,7 @@ export default class App {
    * Initialize core functionality
    */
   private async initializeCore(): Promise<void> {
-    await this.studentController.loadInitialStudents();
-    this.studentController.initializeSidebarToggle();
+    await this.studentController.initialize();
   }
 
   /**
@@ -119,22 +109,11 @@ export default class App {
   }
 
   /**
-   * Handler for sort button clicks
-   */
-  private handleSortButtonClick(): void {
-    try {
-      this.sortManager.handleSortButtonClick();
-    } catch (error) {
-      console.error('Error handling sort button click:', error);
-    }
-  }
-
-  /**
    * Handler for sort field changes
    */
   private handleSortFieldChange(field: SortField): void {
     try {
-      this.sortManager.handleSortFieldChange(field);
+      this.studentController.handleSortFieldChange(field);
     } catch (error) {
       console.error('Error changing sort field:', error);
     }

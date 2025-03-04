@@ -8,10 +8,11 @@ export class Validator {
   static readonly MAX_NAME_LENGTH: number = 50;
   static readonly MAX_EMAIL_LENGTH: number = 50;
 
-  static validateEmail(email: string): boolean {
-    if (email.length > this.MAX_EMAIL_LENGTH) return false;
+  static validateEmail(email: string | undefined): boolean {
+    const value = email ?? '';
+    if (value.length > this.MAX_EMAIL_LENGTH) return false;
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]{2,}){1,2}$/;
-    return emailRegex.test(email);
+    return emailRegex.test(value);
   }
 
   /**
@@ -19,9 +20,10 @@ export class Validator {
    * @param phone - The phone number to validate.
    * @returns True if the phone number is valid, otherwise false.
    */
-  static validatePhone(phone: string): boolean {
+  static validatePhone(phone: string | undefined): boolean {
+    const value = phone ?? '';
     // Remove all whitespace first
-    const trimmedPhone = phone.replace(/\s+/g, '');
+    const trimmedPhone = value.replace(/\s+/g, '');
     // Check if it starts with an optional + and has 10-15 digits
     const phoneRegex = /^\+?\d{10,15}$/;
     return phoneRegex.test(trimmedPhone);
@@ -32,8 +34,8 @@ export class Validator {
    * @param value - The value to validate.
    * @returns True if the value is not empty, otherwise false.
    */
-  static validateRequired(value: string): boolean {
-    return !!value.trim();
+  static validateRequired(value: string | undefined): boolean {
+    return !!(value ?? '').trim();
   }
 
   /**
@@ -41,9 +43,10 @@ export class Validator {
    * @param enrollNum - The enrollment number to validate.
    * @returns True if the enrollment number is valid, otherwise false.
    */
-  static validateEnrollmentNumber(enrollNum: string): boolean {
+  static validateEnrollmentNumber(enrollNum: string | undefined): boolean {
+    const value = enrollNum ?? '';
     const enrollRegex = /^[A-Z]{2}\d{7}$/;
-    return enrollRegex.test(enrollNum);
+    return enrollRegex.test(value);
   }
 
   /**
@@ -51,10 +54,11 @@ export class Validator {
    * @param name - The name to validate.
    * @returns True if the name is valid, otherwise false.
    */
-  static validateName(name: string): boolean {
-    if (name.length > this.MAX_NAME_LENGTH) return false;
+  static validateName(name: string | undefined): boolean {
+    const value = name ?? '';
+    if (value.length > this.MAX_NAME_LENGTH) return false;
     const nameRegex = /^[A-Za-z\s\-']+$/;
-    return nameRegex.test(name);
+    return nameRegex.test(value);
   }
 
   /**
@@ -62,8 +66,9 @@ export class Validator {
    * @param date - The date to validate.
    * @returns True if the date is valid and not in the future, otherwise false.
    */
-  static validateDate(date: string): boolean {
-    const inputDate = new Date(date);
+  static validateDate(date: string | undefined): boolean {
+    const value = date ?? '';
+    const inputDate = new Date(value);
     const today = new Date();
     return !isNaN(inputDate.getTime()) && inputDate <= today;
   }
@@ -84,9 +89,9 @@ export class Validator {
     const errors: Record<string, string> = {};
 
     // Name validation
-    if (!this.validateRequired(student.name || '')) {
+    if (!this.validateRequired(student.name)) {
       errors.name = ERROR_MESSAGES.REQUIRED.NAME;
-    } else if (!this.validateName(student.name || '')) {
+    } else if (!this.validateName(student.name)) {
       errors.name =
         (student.name?.length ?? 0) > this.MAX_NAME_LENGTH
           ? `Maximum ${this.MAX_NAME_LENGTH} characters allowed`
@@ -94,9 +99,9 @@ export class Validator {
     }
 
     // Email validation
-    if (!this.validateRequired(student.email || '')) {
+    if (!this.validateRequired(student.email)) {
       errors.email = ERROR_MESSAGES.REQUIRED.EMAIL;
-    } else if (!this.validateEmail(student.email || '')) {
+    } else if (!this.validateEmail(student.email)) {
       errors.email =
         (student.email?.length ?? 0) > this.MAX_EMAIL_LENGTH
           ? `Maximum ${this.MAX_EMAIL_LENGTH} characters allowed.`
@@ -104,23 +109,25 @@ export class Validator {
     }
 
     // Phone validation
-    if (!this.validateRequired(student.phoneNum || '')) {
+    if (!this.validateRequired(student.phoneNum)) {
       errors.phoneNum = ERROR_MESSAGES.REQUIRED.PHONE;
-    } else if (!this.validatePhone(student.phoneNum || '')) {
+    } else if (!this.validatePhone(student.phoneNum)) {
       errors.phoneNum = ERROR_MESSAGES.INVALID.PHONE;
     }
 
     // Enrollment number validation
-    if (!this.validateRequired(student.enrollNum || '')) {
-      errors.enrollNum = ERROR_MESSAGES.REQUIRED.ENROLL_NUM;
-    } else if (!this.validateEnrollmentNumber(student.enrollNum || '')) {
-      errors.enrollNum = ERROR_MESSAGES.INVALID.ENROLL_NUM;
+    if (student.id) {
+      if (!this.validateRequired(student.enrollNum)) {
+        errors.enrollNum = ERROR_MESSAGES.REQUIRED.ENROLL_NUM;
+      } else if (!this.validateEnrollmentNumber(student.enrollNum)) {
+        errors.enrollNum = ERROR_MESSAGES.INVALID.ENROLL_NUM;
+      }
     }
 
     // Date of admission validation
-    if (!this.validateRequired(student.dateAdmission || '')) {
+    if (!this.validateRequired(student.dateAdmission)) {
       errors.dateAdmission = ERROR_MESSAGES.REQUIRED.DATE_ADMISSION;
-    } else if (!this.validateDate(student.dateAdmission || '')) {
+    } else if (!this.validateDate(student.dateAdmission)) {
       errors.dateAdmission = ERROR_MESSAGES.INVALID.DATE;
     }
 
@@ -132,7 +139,12 @@ export class Validator {
     }
 
     // Check for unique enrollment number
-    if (!errors.enrollNum && student.enrollNum && existingStudents.length > 0) {
+    if (
+      !errors.enrollNum &&
+      !errors.enrollNum &&
+      student.enrollNum &&
+      existingStudents.length > 0
+    ) {
       if (!this.validateUniqueEnrollmentNumber(student.enrollNum, existingStudents, student.id)) {
         errors.enrollNum = ERROR_MESSAGES.DUPLICATE.ENROLL_NUM;
       }

@@ -5,117 +5,158 @@ import { StudentFormView } from '../views/form-view';
 import { StudentListView } from '../views/student-list-view';
 import { ToastHandler } from '../helpers/toast-handler';
 import { Validator } from '../helpers/form-validation';
-import { StudentSort, SortConfig, SortField, SortOrder } from '../helpers/student-sort';
-import { LoadingSpinner } from '../helpers/loading-spinner';
+import { SortField, SortOrder, StudentSort, SortConfig } from '../helpers/student-sort';
 import { Pagination } from '../helpers/pagination';
 import { BaseService } from '../services/data-service';
-/**
- * Custom error class to handle student related errors
- */
-
-export class StudentError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'StudentError';
-  }
-}
+import { StorageError, StudentNotFoundError, ValidationError } from '../helpers/error';
+import { AbstractController } from './abstract-controller';
 
 /**
- * Custom class to handle the case where student is not found
+ * StudentController class manages student data and interactions between the model, view, and storage.
+ * Extends AbstractController to inherit common functionality.
  */
-export class StudentNotFoundError extends StudentError {
-  constructor(id: string) {
-    super(`Student with ID ${id} not found`);
-    this.name = 'StudentNotFoundError';
-  }
-}
-
-/**
- * Custom class to handle validation errors
- */
-export class ValidationError extends StudentError {
-  public errors: Record<string, string>;
-
-  constructor(errors: Record<string, string>) {
-    super('Validation failed');
-    this.name = 'ValidationError';
-    this.errors = errors;
-  }
-}
-
-/**
- * Custom class to handle storage related errors
- */
-export class StorageError extends StudentError {
-  constructor(message: string) {
-    super(`Storage operation failed: ${message}`);
-    this.name = 'StorageError';
-  }
-}
-
-/**
- * BaseController class provides common functionality for handling errors and loading spinner.
- */
-abstract class BaseController {
-  protected loadingSpinner: LoadingSpinner;
-
-  constructor() {
-    this.loadingSpinner = LoadingSpinner.getInstance();
-  }
-
-  /**
-   * Handles errors by displaying appropriate messages and logging the error.
-   * @param error - The error object.
-   */
-  protected handleError(error: unknown): void {
-    const errorMessage = this.getErrorMessage(error);
-    console.error('Error:', error);
-
-    if (error instanceof ValidationError) {
-      throw error; // Let specific controllers handle validation errors
-    } else if (error instanceof StudentNotFoundError) {
-      ToastHandler.show('error', 'Student Not Found', errorMessage);
-    } else if (error instanceof StorageError) {
-      ToastHandler.show('error', 'Storage Error', errorMessage);
-    } else {
-      ToastHandler.show('error', 'System Error', `An unexpected error occurred: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * Retrieves the error message from an error object.
-   * @param error - The error object.
-   * @returns The error message.
-   */
-  protected getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return String(error);
-  }
-}
-
-/**
- * PaginationManager class handles pagination logic.
- */
-class PaginationManager {
+export class StudentController extends AbstractController<Student, BaseService> {
+  private allStudents: Student[] = [];
+  // View components
+  private readonly listView: StudentListView;
+  private readonly formView: StudentFormView;
+  private currentSearchQuery: string = '';
+  // Pagination properties
   private currentPage: number = 1;
   private itemsPerPage: number = 5;
   private pagination: Pagination;
-  private allStudents: Student[] = [];
 
-  constructor(private onDisplayUpdate: (students: Student[]) => void) {
+  // Sort properties
+  private currentSort: SortConfig = {
+    field: 'name' as SortField,
+    order: 'asc' as SortOrder,
+  };
+
+  private sortDropdownHandler: SortDropdownHandler;
+
+  constructor(
+    dataService: BaseService,
+    handlers: {
+      handleDelete: (id: string) => void;
+      handleEdit: (id: string) => void;
+      handleAddNew: () => void;
+      handleSortFieldChange: (field: SortField) => void;
+    },
+  ) {
+    super(dataService);
+
+    // Initialize pagination
     this.pagination = new Pagination('.pagination', this.handlePageChange.bind(this));
+
+    // Initialize views with their event handlers
+    this.listView = new StudentListView(
+      this.handleDelete.bind(this),
+      this.handleEdit.bind(this),
+      this.handleAddNew.bind(this),
+      (field: SortField) => this.handleSortFieldChange(field),
+    );
+
+    this.formView = new StudentFormView(
+      this.handleSave.bind(this),
+      this.handleCancel.bind(this),
+      async () => await this.getAll(),
+    );
+
+    // Initialize sort dropdown handler
+    this.sortDropdownHandler = new SortDropdownHandler((field: SortField, order: SortOrder) => {
+      // Update sort manager with the new field and order
+      if (field !== this.currentSort.field) {
+        this.handleSortFieldChange(field);
+      }
+      if (order !== this.currentSort.order) {
+        this.handleSortButtonClick();
+      }
+    }, this.currentSort);
   }
 
   /**
-   * Updates the dataset and recalculates pagination
-   * @param students - the array of students to update
+   * Initializes the controller and loads initial data
    */
-  public updateData(students: Student[]): void {
-    this.allStudents = students;
-    this.pagination.updateTotalItems(students.length);
-    this.updateDisplayedStudents();
+  public async initialize(): Promise<void> {
+    await this.loadInitialStudents();
+    this.initializeSidebarToggle();
+  }
+
+  /**
+   * Loads the initial list of students and renders them in the list view.
+   */
+  async loadInitialStudents(): Promise<void> {
+    try {
+      this.loadingSpinner.show();
+      this.allStudents = await this.getAll();
+      this.renderStudents();
+    } catch (error) {
+      this.handleError(error);
+    } finally {
+      this.loadingSpinner.hide();
+    }
+  }
+
+  /**
+   * Handles search query input.
+   * @param query - The search query.
+   */
+  public async handleSearchingQuery(query: string): Promise<void> {
+    try {
+      this.currentSearchQuery = query;
+      const allStudents = await this.getAll();
+      this.handlePageChange(1, this.getCurrentPaginationState().itemsPerPage);
+      this.searchStudents(query, allStudents);
+    } catch (error) {
+      this.handleError(error);
+    } finally {
+      this.loadingSpinner.hide();
+    }
+  }
+
+  /**
+   * Searches students based on the query.
+   * @param query - The search query.
+   * @param allStudents - The array of all students.
+   */
+  private searchStudents(query: string, allStudents: Student[]): void {
+    if (!query || query.trim() === '') {
+      this.handleSearch(allStudents);
+      return;
+    }
+
+    const normalizedQuery = query.toLowerCase().trim();
+    const filteredStudents = allStudents.filter((student) =>
+      this.matchesSearch(student, normalizedQuery),
+    );
+    this.handleSearch(filteredStudents);
+  }
+
+  /**
+   * Checks if a student matches the search query.
+   * @param student - The student object.
+   * @param query - The search query.
+   * @returns True if the student matches the query, otherwise false.
+   */
+  private matchesSearch(student: Student, query: string): boolean {
+    return (
+      (student.name?.toLowerCase().includes(query) ?? false) ||
+      (student.email?.toLowerCase().includes(query) ?? false) ||
+      (student.phoneNum?.toLowerCase().includes(query) ?? false) ||
+      (student.enrollNum?.toLowerCase().includes(query) ?? false) ||
+      (student.dateAdmission?.toLowerCase().includes(query) ?? false)
+    );
+  }
+
+  /**
+   * Updates the displayed students in the list view.
+   * @param students - The array of students to display.
+   */
+  private updateDisplayedStudents(): void {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.allStudents.length);
+    const pagedStudents = this.allStudents.slice(startIndex, endIndex);
+    this.listView.renderStudentTable(pagedStudents);
   }
 
   /**
@@ -130,38 +171,25 @@ class PaginationManager {
   }
 
   /**
-   * Updates the displayed students based on current pagination state
-   */
-  private updateDisplayedStudents(): void {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.allStudents.length);
-    const pagedStudents = this.allStudents.slice(startIndex, endIndex);
-    this.onDisplayUpdate(pagedStudents);
-  }
-
-  /**
    * Gets current pagination state
    * returns the current pagination state
    */
-  public getCurrentState(): { page: number; itemsPerPage: number } {
+  public getCurrentPaginationState(): { page: number; itemsPerPage: number } {
     return {
       page: this.currentPage,
       itemsPerPage: this.itemsPerPage,
     };
   }
-}
 
-/**
- * SortManager class handles sorting logic.
- */
-export class SortManager {
-  private allStudents: Student[] = [];
-  private currentSort: SortConfig = {
-    field: 'name' as SortField,
-    order: 'asc' as SortOrder,
-  };
-
-  constructor(private onSort: (students: Student[]) => void) {}
+  /**
+   * Updates the dataset and recalculates pagination
+   * @param students - the array of students to update
+   */
+  private updatePaginationData(students: Student[]): void {
+    this.allStudents = students;
+    this.pagination.updateTotalItems(students.length);
+    this.updateDisplayedStudents();
+  }
 
   /**
    * Gets the current sort configuration.
@@ -181,7 +209,7 @@ export class SortManager {
     } else {
       this.currentSort.field = field;
     }
-    this.onSort(this.sortStudents(this.allStudents));
+    this.handleSort(this.sortStudents(this.allStudents));
   }
 
   /**
@@ -193,15 +221,7 @@ export class SortManager {
     } else {
       this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
     }
-    this.onSort(this.sortStudents(this.allStudents));
-  }
-
-  /**
-   * Updates the data source for the sort manager
-   * @param students - The new student array
-   */
-  public updateDataSource(students: Student[]): void {
-    this.allStudents = [...students];
+    this.handleSort(this.sortStudents(this.allStudents));
   }
 
   /**
@@ -209,154 +229,8 @@ export class SortManager {
    * @param students - The array of students to sort.
    * @returns The sorted array of students.
    */
-  public sortStudents(students: Student[]): Student[] {
-    this.allStudents = [...students];
+  private sortStudents(students: Student[]): Student[] {
     return StudentSort.sortStudents(students, this.currentSort);
-  }
-}
-
-/**
- * SearchManager class handles search functionality.
- */
-export class SearchManager {
-  constructor(private onSearch: (students: Student[]) => void) {}
-
-  /**
-   * Searches students based on the query.
-   * @param query - The search query.
-   * @param allStudents - The array of all students.
-   */
-  public searchStudents(query: string, allStudents: Student[]): void {
-    if (!query || query.trim() === '') {
-      this.onSearch(allStudents);
-      return;
-    }
-
-    const normalizedQuery = query.toLowerCase().trim();
-    const filteredStudents = allStudents.filter((student) =>
-      this.matchesSearch(student, normalizedQuery),
-    );
-    this.onSearch(filteredStudents);
-  }
-
-  /**
-   * Checks if a student matches the search query.
-   * @param student - The student object.
-   * @param query - The search query.
-   * @returns True if the student matches the query, otherwise false.
-   */
-  private matchesSearch(student: Student, query: string): boolean {
-    return (
-      (student.name?.toLowerCase().includes(query) ?? false) ||
-      (student.email?.toLowerCase().includes(query) ?? false) ||
-      (student.phoneNum?.toLowerCase().includes(query) ?? false) ||
-      (student.enrollNum?.toLowerCase().includes(query) ?? false) ||
-      (student.dateAdmission?.toLowerCase().includes(query) ?? false)
-    );
-  }
-}
-
-/**
- * StudentController class manages student data and interactions between the model, view, and storage.
- */
-export class StudentController extends BaseController {
-  private allStudents: Student[] = [];
-  // Core properties
-  private readonly dataService: BaseService;
-  private readonly listView: StudentListView;
-  private readonly formView: StudentFormView;
-
-  // Manager classes
-  private readonly paginationManager: PaginationManager;
-  private readonly sortManager: SortManager;
-  private readonly searchManager: SearchManager;
-  private sortDropdownHandler: SortDropdownHandler;
-  constructor(
-    dataService: BaseService,
-    handlers: {
-      handleDelete: (id: string) => void;
-      handleEdit: (id: string) => void;
-      handleAddNew: () => void;
-      handleSortButtonClick: () => void;
-      handleSortFieldChange: (field: SortField) => void;
-    },
-  ) {
-    super();
-    this.dataService = dataService;
-
-    // Initialize managers with their callback functions
-    this.paginationManager = new PaginationManager(this.updateDisplayedStudents.bind(this));
-    this.sortManager = new SortManager(this.handleSort.bind(this));
-    this.searchManager = new SearchManager(this.handleSearch.bind(this));
-
-    // Initialize views with their event handlers
-    this.listView = new StudentListView(
-      this.handleDelete.bind(this),
-      this.handleEdit.bind(this),
-      this.handleAddNew.bind(this),
-      () => this.sortManager.handleSortButtonClick(),
-      (field: SortField) => this.sortManager.handleSortFieldChange(field),
-    );
-
-    this.formView = new StudentFormView(
-      this.handleSave.bind(this),
-      this.handleCancel.bind(this),
-      async () => await this.getAllStudents(),
-    );
-
-    // Initialize sort dropdown handler
-    this.sortDropdownHandler = new SortDropdownHandler((field: SortField, order: SortOrder) => {
-      // Update sort manager with the new field and order
-      if (field !== this.sortManager.getCurrentSort().field) {
-        this.sortManager.handleSortFieldChange(field);
-      }
-      if (order !== this.sortManager.getCurrentSort().order) {
-        this.sortManager.handleSortButtonClick();
-      }
-    }, this.sortManager.getCurrentSort());
-  }
-
-  /**---------------------
-   * PUBLIC METHODS
-   * ---------------------
-   */
-
-  /**
-   * Loads the initial list of students and renders them in the list view.
-   */
-  async loadInitialStudents(): Promise<void> {
-    try {
-      this.loadingSpinner.show();
-      this.allStudents = await this.getAllStudents();
-      this.renderStudents();
-    } catch (error) {
-      this.handleError(error);
-    } finally {
-      this.loadingSpinner.hide();
-    }
-  }
-
-  /**
-   * Handles search query input.
-   * @param query - The search query.
-   */
-  public async handleSearchingQuery(query: string): Promise<void> {
-    try {
-      const allStudents = await this.getAllStudents();
-      this.searchManager.searchStudents(query, allStudents);
-    } catch (error) {
-      this.handleError(error);
-    } finally {
-      this.loadingSpinner.hide();
-    }
-  }
-
-  /**
-   * Updates the displayed students in the list view.
-   * @param students - The array of students to display.
-   */
-  public updateDisplayedStudents(students: Student[]): void {
-    this.listView.renderStudentTable(students);
   }
 
   /**
@@ -376,10 +250,7 @@ export class StudentController extends BaseController {
    */
   public async handleEdit(id: string): Promise<void> {
     try {
-      const student = await this.getStudentById(id);
-      if (!student) {
-        throw new StudentNotFoundError(id);
-      }
+      const student = await this.getById(id);
       this.formView.showEditForm(student);
     } catch (error) {
       this.handleError(error);
@@ -390,17 +261,35 @@ export class StudentController extends BaseController {
    * Handles action of deleting a student by showing the confirmation dialog
    * @param id - the id of student to delete
    */
-  public handleDelete(id: string): void {
+  public async handleDelete(id: string): Promise<void> {
     try {
+      const student = await this.getById(id);
       ToastHandler.showConfirmation(
         'Confirm Deletion',
-        'Are you sure you want to delete this student?',
+        `Are you sure you want to delete this student: ${student.name}?`,
         async () => {
           try {
+            await this.delete(id);
             this.loadingSpinner.show();
-            await this.deleteStudent(id);
+            // Get current pagination state before refresh
+            const { page, itemsPerPage } = this.getCurrentPaginationState();
 
-            await this.renderStudents(true);
+            // Get updated student list
+            const updatedStudents = await this.getAll();
+
+            // Calculate total page after deletion
+            const totalPages = Math.max(1, Math.ceil(updatedStudents.length / itemsPerPage));
+
+            // if current page is greater that total page after deletion, go to previous page
+            if (page > totalPages && page > 1) {
+              this.handlePageChange(page - 1, itemsPerPage);
+            }
+
+            if (this.currentSearchQuery) {
+              await this.handleSearchingQuery(this.currentSearchQuery);
+            } else {
+              await this.renderStudents(true);
+            }
 
             ToastHandler.show('success', 'Success', 'Student deleted successfully');
           } catch (error) {
@@ -435,18 +324,13 @@ export class StudentController extends BaseController {
     }
   }
 
-  /**--------------------------------
-   * PRIVATE METHODS
-   * ----------------------------------
-   */
-
   /**
    * Handles sort event.
    * @param students - The sorted array of students.
    */
   private handleSort(students: Student[]): void {
     this.allStudents = students;
-    this.paginationManager.updateData(this.allStudents);
+    this.updatePaginationData(this.allStudents);
   }
 
   /**
@@ -457,32 +341,29 @@ export class StudentController extends BaseController {
     // Update the allStudents array with the filtered results
     this.allStudents = students;
 
+    this.handlePageChange(1, this.getCurrentPaginationState().itemsPerPage);
+
     // Update pagination with the new dataset (this will trigger UI update)
-    this.paginationManager.updateData(this.allStudents);
+    this.updatePaginationData(this.allStudents);
   }
 
   /**
    * Renders the list of students in the table body.
-   * @param students - An array of students to render.
-   *  @param preservePage - Whether to preserve current page after update (default: false)
+   * @param preservePage - Whether to preserve current page after update (default: false)
    */
-
   private async renderStudents(preservePage: boolean = false): Promise<void> {
     try {
       // Get and update all students
-      this.allStudents = await this.getAllStudents();
-
-      // Update sort manager's data source
-      this.sortManager.updateDataSource(this.allStudents);
+      this.allStudents = await this.getAll();
 
       // Apply current sort
-      const sortedStudents = this.sortManager.sortStudents(this.allStudents);
+      const sortedStudents = this.sortStudents(this.allStudents);
 
       // Update pagination with new dataset
-      this.paginationManager.updateData(sortedStudents);
+      this.updatePaginationData(sortedStudents);
 
       // Update sort UI
-      this.listView.updateSortUI(this.sortManager.getCurrentSort());
+      this.sortDropdownHandler.updateSortUI(this.getCurrentSort());
     } catch (error) {
       this.handleError(error);
     }
@@ -494,12 +375,17 @@ export class StudentController extends BaseController {
    */
   private async handleSave(studentData: Partial<Student>): Promise<void> {
     try {
-      this.loadingSpinner.show();
-      const allStudents = await this.getAllStudents();
+      const allStudents = await this.executeOperation(
+        async () => await this.getAll(),
+        'Failed to retrieve students for validation',
+        false,
+      );
       const { isValid, errors } = Validator.validateForm(studentData, allStudents);
+
       if (!isValid) {
         throw new ValidationError(errors);
       }
+      this.loadingSpinner.show();
 
       if (studentData.id) {
         await this.updateExistingStudent(studentData);
@@ -537,8 +423,14 @@ export class StudentController extends BaseController {
   private async createNewStudent(studentData: Partial<Student>): Promise<void> {
     try {
       const newStudent = new StudentModel(studentData);
-      await this.dataService.create(newStudent);
-      await this.renderStudents();
+      await this.create(newStudent);
+
+      if (this.currentSearchQuery) {
+        await this.handleSearchingQuery(this.currentSearchQuery);
+      } else {
+        await this.renderStudents();
+      }
+
       ToastHandler.show('success', 'Success', 'Student added successfully');
     } catch (error) {
       throw new StorageError(`Failed to create student: ${this.getErrorMessage(error)}`);
@@ -555,70 +447,26 @@ export class StudentController extends BaseController {
         throw new Error('Student ID is required for update');
       }
 
-      const existingStudent = await this.getStudentById(studentData.id);
+      const existingStudent = await this.getById(studentData.id);
       const updatedStudent = new StudentModel({
         ...existingStudent,
         ...studentData,
       });
 
-      await this.dataService.update(updatedStudent);
-      this.renderStudents(true);
+      await this.update(updatedStudent);
+
+      if (this.currentSearchQuery) {
+        await this.handleSearchingQuery(this.currentSearchQuery);
+      } else {
+        await this.renderStudents(true);
+      }
+
       ToastHandler.show('success', 'Success', 'Student updated successfully');
     } catch (error) {
       if (error instanceof StudentNotFoundError) {
         throw error;
       }
       throw new StorageError(`Failed to update student: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**---------------------------
-   * DATA ACCESS METHODS
-   * -----------------------------
-   */
-
-  /**
-   * Retrieves all students from storage.
-   * @returns An array of students.
-   */
-  private async getAllStudents(): Promise<Student[]> {
-    try {
-      return await this.dataService.getAll();
-    } catch (error) {
-      throw new StorageError(`Failed to retrieve students: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Retrieves a student by ID from storage.
-   * @param id - The ID of the student to retrieve.
-   * @returns The student object if found, otherwise undefined.
-   */
-  private async getStudentById(id: string): Promise<Student> {
-    try {
-      const student = await this.dataService.getById(id);
-      if (!student) {
-        throw new StudentNotFoundError(id);
-      }
-      return student;
-    } catch (error) {
-      throw new StorageError(`Failed to retrieve student: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Deletes a student from storage
-   * @param id: id of student to delete
-   * @return an array of student excluding the deleted student
-   */
-  private async deleteStudent(id: string): Promise<void> {
-    try {
-      await this.dataService.delete(id);
-    } catch (error) {
-      if (error instanceof StudentNotFoundError) {
-        throw error;
-      }
-      throw new StorageError(`Failed to delete student: ${this.getErrorMessage(error)}`);
     }
   }
 }

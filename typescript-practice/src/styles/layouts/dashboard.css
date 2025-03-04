@@ -16,9 +16,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   background-color: var(--white-color);
-  padding: 10px 20px;
-  margin-bottom: 20px;
+  padding: 1rem 2rem;
+  margin-bottom: 2rem;
 }
 
 .back-icon img {
@@ -52,6 +53,7 @@
   width: 100%;
   height: 100%;
   padding: 8px 12px;
+
   border: 1px solid #ddd;
   border-radius: 20px;
   outline: none;
@@ -67,8 +69,9 @@
 
 .content__search-icon {
   position: absolute;
-  right: 12px;
+  right: 1.2rem;
   top: 50%;
+
   transform: translateY(-50%);
   color: #999;
   width: 1.4rem;

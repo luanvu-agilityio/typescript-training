@@ -2,6 +2,8 @@ import { formatDate, parseDate } from '../helpers/date-formatter';
 import Student from '../interfaces/student';
 import { studentFormTemplate } from '../templates/student-form';
 import { Validator } from '../helpers/form-validation';
+import { ToastHandler } from '../helpers/toast-handler';
+import { CloudinaryUploadService } from '../services/image-upload';
 // @ts-expect-error
 import defaultAvatar from '../../assets/images/user-images/user-profile.png';
 
@@ -53,6 +55,8 @@ export class StudentFormView {
     this.formErrorElements = {};
     this.renderForm();
     this.show();
+
+    this.generateEnrollmentNumber();
   }
 
   /**
@@ -77,7 +81,9 @@ export class StudentFormView {
 
     // Display new errors
     Object.entries(errors).forEach(([field, message]) => {
-      this.updateSingleFieldError(field, message);
+      if (field !== 'enrollNum') {
+        this.updateSingleFieldError(field, message);
+      }
     });
 
     // Update submit button state
@@ -126,6 +132,55 @@ export class StudentFormView {
     this.populateFormFields(student);
     this.attachFormEventListeners();
     this.attachValidationListeners();
+
+    const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
+    if (enrollInput) {
+      enrollInput.disabled = true;
+      enrollInput.classList.add('disabled-input');
+    }
+  }
+
+  /**
+   * Generate a unique enrollment number
+   */
+  private async generateEnrollmentNumber(): Promise<void> {
+    const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
+    if (!enrollInput) return;
+
+    try {
+      const students = await this.getAllStudentsAsync();
+
+      // Generate a random enrollment number following the pattern: 2 uppercase letters + 7 digits
+      let isUnique = false;
+      let enrollNum = '';
+
+      while (!isUnique) {
+        // Generate letters (A-Z)
+        const letters = Array(2)
+          .fill(0)
+          .map(() => String.fromCharCode(65 + Math.floor(Math.random() * 26)))
+          .join('');
+
+        // Generate 7 digits
+        const digits = Array(7)
+          .fill(0)
+          .map(() => Math.floor(Math.random() * 10))
+          .join('');
+
+        enrollNum = `${letters}${digits}`;
+
+        // Check if this number already exists
+        isUnique = !students.some((student) => student.enrollNum === enrollNum);
+      }
+
+      // Set the value of the input
+      enrollInput.value = enrollNum;
+
+      // Clear any existing error for enrollment number
+      this.clearFieldError('enrollNum');
+    } catch (error) {
+      console.error('Failed to generate enrollment number:', error);
+    }
   }
 
   /**
@@ -243,24 +298,59 @@ export class StudentFormView {
   private attachImageUploadListeners(): void {
     const uploadBtn = this.formContainer.querySelector('.upload-btn');
     const fileInput = this.formContainer.querySelector('#avatarUpload') as HTMLInputElement;
+    const avatarImg = this.formContainer.querySelector('.profile-placeholder img');
+    const uploadStatus = this.formContainer.querySelector('.upload-status');
 
     uploadBtn?.addEventListener('click', () => {
       fileInput?.click();
     });
 
-    fileInput?.addEventListener('change', (e) => {
+    fileInput?.addEventListener('change', async (e) => {
       const target = e.target as HTMLInputElement;
       if (target.files && target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          const avatarImg = this.formContainer.querySelector('.profile-placeholder img');
+        try {
+          // Show loading state
           if (avatarImg) {
-            avatarImg.setAttribute('src', result);
-            avatarImg.setAttribute('class', 'student-avatar');
+            avatarImg.classList.add('loading');
+            uploadStatus?.classList.remove('hidden');
           }
-        };
-        reader.readAsDataURL(target.files[0]);
+
+          // Upload to Cloudinary
+          const uploadedImageUrl = await CloudinaryUploadService.uploadAvatar(target.files[0]);
+
+          if (avatarImg) {
+            // Set the image preview to the uploaded image
+            avatarImg.setAttribute('src', uploadedImageUrl);
+            avatarImg.setAttribute('class', 'student-avatar');
+
+            // Optional: Show success message
+            if (uploadStatus) {
+              uploadStatus.textContent = 'Upload successful!';
+              uploadStatus?.classList.add('success');
+            }
+          }
+        } catch (error) {
+          // Handle upload error
+          console.error('Avatar upload failed:', error);
+
+          // Show error message
+          if (uploadStatus) {
+            uploadStatus.textContent = error instanceof Error ? error.message : 'Upload failed';
+            uploadStatus.classList.add('error');
+          }
+
+          // Optionally show error toast
+          ToastHandler.show(
+            'error',
+            'Upload Failed',
+            error instanceof Error ? error.message : 'Could not upload avatar',
+          );
+        } finally {
+          // Remove loading indicator
+          if (avatarImg) {
+            avatarImg.classList.remove('loading');
+          }
+        }
       }
     });
   }
@@ -282,12 +372,12 @@ export class StudentFormView {
    * @return {Partial<Student>} collect form data as a partial student object
    */
   private getFormData(): Partial<Student> {
+    const avatarImg = this.formContainer.querySelector('.student-avatar') as HTMLImageElement;
     const nameInput = this.formContainer.querySelector('#name') as HTMLInputElement;
     const emailInput = this.formContainer.querySelector('#email') as HTMLInputElement;
     const phoneInput = this.formContainer.querySelector('#phone') as HTMLInputElement;
     const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
     const admissionInput = this.formContainer.querySelector('#admission') as HTMLInputElement;
-    const avatarImg = this.formContainer.querySelector('.student-avatar') as HTMLImageElement;
 
     // Format the date for display
     let formattedDate = '';
@@ -302,7 +392,7 @@ export class StudentFormView {
       phoneNum: phoneInput.value,
       enrollNum: enrollInput.value,
       dateAdmission: formattedDate,
-      avatar: avatarImg?.src || `${defaultAvatar}'`,
+      avatar: avatarImg?.src || `${defaultAvatar}`,
     };
 
     if (this.currentStudentId) {
@@ -392,7 +482,6 @@ export class StudentFormView {
           name: 'name',
           email: 'email',
           phone: 'phoneNum',
-          enroll: 'enrollNum',
           admission: 'dateAdmission',
         };
 
@@ -420,7 +509,7 @@ export class StudentFormView {
       name: 'name',
       email: 'email',
       phone: 'phoneNum',
-      enroll: 'enrollNum',
+
       admission: 'dateAdmission',
     };
 
@@ -437,7 +526,7 @@ export class StudentFormView {
     }
 
     // For email and enrollment, check for duplicates
-    if (field === 'email' || field === 'enrollNum') {
+    if (field === 'email') {
       // Get all students asynchronously and perform validation
       this.checkDuplicateField(field, value, partialStudent);
       return;
@@ -537,6 +626,7 @@ export class StudentFormView {
    * @param {string} errorMessage - error message to display
    */
   private updateSingleFieldError(field: string, errorMessage: string): void {
+    if (field === 'enrollNum') return;
     const errorEl = this.formErrorElements[field];
     if (errorEl) {
       errorEl.textContent = errorMessage;

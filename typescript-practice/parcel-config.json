@@ -1,0 +1,7 @@
+{
+  "extends": "@parcel/config-default",
+  "reporters": ["@parcel/reporter-cli"],
+  "transformers": {
+    "*.{png,jpg,jpeg,svg}": ["@parcel/transformer-image"]
+  }
+}
