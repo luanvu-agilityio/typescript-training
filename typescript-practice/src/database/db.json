@@ -19,15 +19,6 @@
       "id": "e001a461-f496-45ce-a578-2dd6406ba1b0"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
-      "name": "Truc Tran",
-      "email": "truchanhtran@gmail.com",
-      "phoneNum": "0306852753",
-      "enrollNum": "EN1230971",
-      "dateAdmission": "3-Feb, 2025",
-      "id": "ca36c901-9b4a-4316-a8c4-60379d7ad9fc"
-    },
-    {
       "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740551405410%27",
       "name": "John Doe",
       "email": "john.doe@example.com",
@@ -47,7 +38,7 @@
     },
     {
       "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740992128017%27",
-      "name": "asdasd",
+      "name": "alice",
       "email": "test@example.com",
       "phoneNum": "12345645678",
       "enrollNum": "EN1235321",

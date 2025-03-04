@@ -1,7 +1,7 @@
 import { StudentController } from './controllers/controller';
 import { initializeStudentSearch } from '../scripts/helpers/search-handler';
 import { SortField } from './helpers/student-sort';
-import { SortManager } from './controllers/controller';
+import { SortManager } from './controllers/sort-manager';
 import Student from './interfaces/student';
 import { DataServiceEnvironment } from '../scripts/services/data-service';
 

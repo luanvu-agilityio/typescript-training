@@ -17,22 +17,31 @@ const environment: Environment = {
   baseImageUrl: 'https://typescript-training-jz30.onrender.com',
 };
 
-export interface BaseService {
-  getAll(): Promise<Student[]>;
-  getById(id: string): Promise<Student | undefined>;
-  create(student: Student): Promise<Student>;
-  update(student: Student): Promise<Student>;
-  delete(id: string): Promise<void>;
+export abstract class BaseService {
+  abstract getAll(): Promise<Student[]>;
+  abstract getById(id: string): Promise<Student | undefined>;
+  abstract create(student: Student): Promise<Student>;
+  abstract update(student: Student): Promise<Student>;
+  abstract delete(id: string): Promise<void>;
+
+  // Common error handling or utility methods could be added here
+  protected handleError(error: unknown, operation: string): Error {
+    console.error(`Error during ${operation}:`, error);
+    return error instanceof Error
+      ? error
+      : new Error(`Unknown error during ${operation}: ${String(error)}`);
+  }
 }
 
 /**
  * LocalStorageService class implements BaseService to manage student data using localStorage
  */
-class LocalStorageService implements BaseService {
+class LocalStorageService extends BaseService {
   private readonly STORAGE_KEY = 'all students';
   private baseImageUrl: string;
 
   constructor(baseImageUrl: string) {
+    super();
     this.baseImageUrl = baseImageUrl;
   }
 
@@ -48,7 +57,7 @@ class LocalStorageService implements BaseService {
 
       return students;
     } catch (error) {
-      throw new Error('fail to retrieve students form local storage');
+      throw this.handleError(error, 'retrieving students from local storage');
     }
   }
 
@@ -61,7 +70,7 @@ class LocalStorageService implements BaseService {
     const students = await this.getAll();
     const student = students.find((s) => s.id === id);
     if (!student) {
-      throw new Error(`Student with ID ${id} is not found`);
+      throw this.handleError(new StudentNotFoundError(id), 'retrieving student by id');
     }
 
     return student;
@@ -89,7 +98,7 @@ class LocalStorageService implements BaseService {
     const students = await this.getAll();
     const index = students.findIndex((s) => s.id === student.id);
     if (index === -1) {
-      throw new StudentNotFoundError(`Student with Id ${student.id} is not found`);
+      throw this.handleError(new StudentNotFoundError(student.id!), 'updating student');
     }
 
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
@@ -115,10 +124,11 @@ class LocalStorageService implements BaseService {
 /**
  * ApiDataService class implement BaseService to manage student using a remote API
  */
-class ApiDataService implements BaseService {
+class ApiDataService extends BaseService {
   private readonly baseUrl: string;
   private readonly baseImageUrl: string;
   constructor(baseUrl: string) {
+    super();
     this.baseUrl = `${baseUrl}/students`;
     this.baseImageUrl = environment.baseImageUrl;
   }
@@ -130,7 +140,7 @@ class ApiDataService implements BaseService {
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      throw new Error(`Error! Status: ${response.status}`);
+      throw this.handleError(new Error(`Error! Status: ${response.status}`), 'fetching data');
     }
 
     return await response.json();
@@ -145,8 +155,7 @@ class ApiDataService implements BaseService {
       const response = await fetch(this.baseUrl);
       return this.handleResponse<Student[]>(response);
     } catch (error) {
-      console.error('Error fetching student:', error);
-      throw new Error('Fail to fetch students for API');
+      throw this.handleError(error, 'fetching all students');
     }
   }
 
@@ -186,7 +195,7 @@ class ApiDataService implements BaseService {
       return this.handleResponse<Student>(response);
     } catch (error) {
       console.error('Error creating student:', error);
-      throw new Error('Fail to create student in API');
+      throw this.handleError(error, 'creating student');
     }
   }
 
@@ -206,8 +215,7 @@ class ApiDataService implements BaseService {
       });
       return this.handleResponse<Student>(response);
     } catch (error) {
-      console.error(`Error updating studnet ${student.id}:`, error);
-      throw new Error(`Fail to update student ${student.id} in API`);
+      throw this.handleError(error, 'updating student');
     }
   }
 
@@ -225,8 +233,7 @@ class ApiDataService implements BaseService {
         throw new Error(`Error! Status: ${response.status}`);
       }
     } catch (error) {
-      console.error(`Error deleting student ${id}`, error);
-      throw new Error(`Fail to delete student ${id} from Api`);
+      throw this.handleError(error, 'deleting student');
     }
   }
 }
