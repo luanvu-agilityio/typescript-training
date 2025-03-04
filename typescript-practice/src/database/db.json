@@ -134,6 +134,42 @@
       "enrollNum": "EN3456780",
       "dateAdmission": "13-Feb, 2025",
       "id": "34567890-3456-3456-3456-345678901235"
+    },
+    {
+      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
+      "name": "alice a",
+      "email": "alicea@gmail.com",
+      "phoneNum": " 023303 513122",
+      "enrollNum": "EN3464545",
+      "dateAdmission": "24-Feb, 2025",
+      "id": "27ca82ea-ec49-4303-94fc-70e2968bfea6"
+    },
+    {
+      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
+      "name": "alice e",
+      "email": "alicee@gmail.com",
+      "phoneNum": "0213 613 00233",
+      "enrollNum": "EN9894632",
+      "dateAdmission": "26-Feb, 2025",
+      "id": "dd3404a4-1720-43d6-9ebc-4427759428df"
+    },
+    {
+      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
+      "name": "alice t",
+      "email": "alicet@gmail.com",
+      "phoneNum": "131 46513 1321",
+      "enrollNum": "EN9512152",
+      "dateAdmission": "27-Feb, 2025",
+      "id": "b9bcbc12-b52d-4018-b852-b9422a946c3f"
+    },
+    {
+      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
+      "name": "alicem",
+      "email": "alicem@gmail.com",
+      "phoneNum": "0213 203 516",
+      "enrollNum": "EN9643244",
+      "dateAdmission": "27-Feb, 2025",
+      "id": "ac3f659b-ea1d-4245-a08c-479f48931fc5"
     }
   ]
 }

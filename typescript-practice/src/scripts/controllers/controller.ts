@@ -105,6 +105,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
     try {
       this.currentSearchQuery = query;
       const allStudents = await this.getAll();
+      this.handlePageChange(1, this.getCurrentPaginationState().itemsPerPage);
       this.searchStudents(query, allStudents);
     } catch (error) {
       this.handleError(error);
@@ -339,6 +340,9 @@ export class StudentController extends AbstractController<Student, BaseService> 
   private handleSearch(students: Student[]): void {
     // Update the allStudents array with the filtered results
     this.allStudents = students;
+    const { itemsPerPage } = this.getCurrentPaginationState();
+
+    this.handlePageChange(1, this.getCurrentPaginationState().itemsPerPage);
 
     // Update pagination with the new dataset (this will trigger UI update)
     this.updatePaginationData(this.allStudents);
