@@ -1,7 +1,6 @@
 import { StudentController } from './controllers/controller';
 import { initializeStudentSearch } from '../scripts/helpers/search-handler';
 import { SortField } from './helpers/student-sort';
-import { SortManager } from './controllers/sort-manager';
 import Student from './interfaces/student';
 import { DataServiceEnvironment } from '../scripts/services/data-service';
 
@@ -10,14 +9,8 @@ import { DataServiceEnvironment } from '../scripts/services/data-service';
  */
 export default class App {
   private studentController!: StudentController;
-  private readonly sortManager: SortManager;
 
   constructor() {
-    // Initialize the sort manager with a callback to handle sorted students
-    this.sortManager = new SortManager((sortedStudents: Student[]) => {
-      // Update the displayed students when sorting occurs
-      this.studentController.updateDisplayedStudents(sortedStudents);
-    });
     this.checkAuth();
   }
 
@@ -64,8 +57,7 @@ export default class App {
    * Initialize core functionality
    */
   private async initializeCore(): Promise<void> {
-    await this.studentController.loadInitialStudents();
-    this.studentController.initializeSidebarToggle();
+    await this.studentController.initialize();
   }
 
   /**
@@ -122,7 +114,7 @@ export default class App {
    */
   private handleSortFieldChange(field: SortField): void {
     try {
-      this.sortManager.handleSortFieldChange(field);
+      this.studentController.handleSortFieldChange(field);
     } catch (error) {
       console.error('Error changing sort field:', error);
     }

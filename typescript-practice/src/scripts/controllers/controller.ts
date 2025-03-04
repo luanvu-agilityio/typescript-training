@@ -5,13 +5,11 @@ import { StudentFormView } from '../views/form-view';
 import { StudentListView } from '../views/student-list-view';
 import { ToastHandler } from '../helpers/toast-handler';
 import { Validator } from '../helpers/form-validation';
-import { SortField, SortOrder } from '../helpers/student-sort';
-import { PaginationManager } from './pagination-manager';
+import { SortField, SortOrder, StudentSort, SortConfig } from '../helpers/student-sort';
+import { Pagination } from '../helpers/pagination';
 import { BaseService } from '../services/data-service';
 import { StorageError, StudentNotFoundError, ValidationError } from '../helpers/error';
 import { AbstractController } from './abstract-controller';
-import { SearchManager } from './search-manager';
-import { SortManager } from './sort-manager';
 
 /**
  * StudentController class manages student data and interactions between the model, view, and storage.
@@ -23,10 +21,17 @@ export class StudentController extends AbstractController<Student, BaseService> 
   private readonly listView: StudentListView;
   private readonly formView: StudentFormView;
   private currentSearchQuery: string = '';
-  // Manager classes
-  private readonly paginationManager: PaginationManager;
-  private readonly sortManager: SortManager;
-  private readonly searchManager: SearchManager;
+  // Pagination properties
+  private currentPage: number = 1;
+  private itemsPerPage: number = 5;
+  private pagination: Pagination;
+
+  // Sort properties
+  private currentSort: SortConfig = {
+    field: 'name' as SortField,
+    order: 'asc' as SortOrder,
+  };
+
   private sortDropdownHandler: SortDropdownHandler;
 
   constructor(
@@ -40,17 +45,15 @@ export class StudentController extends AbstractController<Student, BaseService> 
   ) {
     super(dataService);
 
-    // Initialize managers with their callback functions
-    this.paginationManager = new PaginationManager(this.updateDisplayedStudents.bind(this));
-    this.sortManager = new SortManager(this.handleSort.bind(this));
-    this.searchManager = new SearchManager(this.handleSearch.bind(this));
+    // Initialize pagination
+    this.pagination = new Pagination('.pagination', this.handlePageChange.bind(this));
 
     // Initialize views with their event handlers
     this.listView = new StudentListView(
       this.handleDelete.bind(this),
       this.handleEdit.bind(this),
       this.handleAddNew.bind(this),
-      (field: SortField) => this.sortManager.handleSortFieldChange(field),
+      (field: SortField) => this.handleSortFieldChange(field),
     );
 
     this.formView = new StudentFormView(
@@ -62,13 +65,13 @@ export class StudentController extends AbstractController<Student, BaseService> 
     // Initialize sort dropdown handler
     this.sortDropdownHandler = new SortDropdownHandler((field: SortField, order: SortOrder) => {
       // Update sort manager with the new field and order
-      if (field !== this.sortManager.getCurrentSort().field) {
-        this.sortManager.handleSortFieldChange(field);
+      if (field !== this.currentSort.field) {
+        this.handleSortFieldChange(field);
       }
-      if (order !== this.sortManager.getCurrentSort().order) {
-        this.sortManager.handleSortButtonClick();
+      if (order !== this.currentSort.order) {
+        this.handleSortButtonClick();
       }
-    }, this.sortManager.getCurrentSort());
+    }, this.currentSort);
   }
 
   /**
@@ -102,7 +105,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
     try {
       this.currentSearchQuery = query;
       const allStudents = await this.getAll();
-      this.searchManager.searchStudents(query, allStudents);
+      this.searchStudents(query, allStudents);
     } catch (error) {
       this.handleError(error);
     } finally {
@@ -111,11 +114,122 @@ export class StudentController extends AbstractController<Student, BaseService> 
   }
 
   /**
+   * Searches students based on the query.
+   * @param query - The search query.
+   * @param allStudents - The array of all students.
+   */
+  private searchStudents(query: string, allStudents: Student[]): void {
+    if (!query || query.trim() === '') {
+      this.handleSearch(allStudents);
+      return;
+    }
+
+    const normalizedQuery = query.toLowerCase().trim();
+    const filteredStudents = allStudents.filter((student) =>
+      this.matchesSearch(student, normalizedQuery),
+    );
+    this.handleSearch(filteredStudents);
+  }
+
+  /**
+   * Checks if a student matches the search query.
+   * @param student - The student object.
+   * @param query - The search query.
+   * @returns True if the student matches the query, otherwise false.
+   */
+  private matchesSearch(student: Student, query: string): boolean {
+    return (
+      (student.name?.toLowerCase().includes(query) ?? false) ||
+      (student.email?.toLowerCase().includes(query) ?? false) ||
+      (student.phoneNum?.toLowerCase().includes(query) ?? false) ||
+      (student.enrollNum?.toLowerCase().includes(query) ?? false) ||
+      (student.dateAdmission?.toLowerCase().includes(query) ?? false)
+    );
+  }
+
+  /**
    * Updates the displayed students in the list view.
    * @param students - The array of students to display.
    */
-  public updateDisplayedStudents(students: Student[]): void {
-    this.listView.renderStudentTable(students);
+  private updateDisplayedStudents(): void {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.allStudents.length);
+    const pagedStudents = this.allStudents.slice(startIndex, endIndex);
+    this.listView.renderStudentTable(pagedStudents);
+  }
+
+  /**
+   * Handles page change event.
+   * @param page - The new page number.
+   * @param itemsPerPage - The number of items per page.
+   */
+  public handlePageChange(page: number, itemsPerPage: number): void {
+    this.currentPage = page;
+    this.itemsPerPage = itemsPerPage;
+    this.updateDisplayedStudents();
+  }
+
+  /**
+   * Gets current pagination state
+   * returns the current pagination state
+   */
+  public getCurrentPaginationState(): { page: number; itemsPerPage: number } {
+    return {
+      page: this.currentPage,
+      itemsPerPage: this.itemsPerPage,
+    };
+  }
+
+  /**
+   * Updates the dataset and recalculates pagination
+   * @param students - the array of students to update
+   */
+  private updatePaginationData(students: Student[]): void {
+    this.allStudents = students;
+    this.pagination.updateTotalItems(students.length);
+    this.updateDisplayedStudents();
+  }
+
+  /**
+   * Gets the current sort configuration.
+   * @returns The current sort configuration.
+   */
+  public getCurrentSort(): SortConfig {
+    return { ...this.currentSort };
+  }
+
+  /**
+   * Handles sort field change event.
+   * @param field - The new sort field.
+   */
+  public handleSortFieldChange(field: SortField): void {
+    if (!this.currentSort) {
+      this.currentSort = { field, order: 'asc' };
+    } else {
+      this.currentSort.field = field;
+    }
+    this.handleSort(this.sortStudents(this.allStudents));
+  }
+
+  /**
+   * Handles sort button click event.
+   */
+  public handleSortButtonClick(): void {
+    if (!this.currentSort) {
+      this.currentSort = { field: 'name', order: 'asc' };
+    } else {
+      this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
+    }
+    this.handleSort(this.sortStudents(this.allStudents));
+  }
+
+  /**
+   * Sorts the students based on the current sort configuration.
+   * @param students - The array of students to sort.
+   * @returns The sorted array of students.
+   */
+  private sortStudents(students: Student[]): Student[] {
+    return StudentSort.sortStudents(students, this.currentSort);
   }
 
   /**
@@ -157,7 +271,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
             await this.delete(id);
             this.loadingSpinner.show();
             // Get current pagination state before refresh
-            const { page, itemsPerPage } = this.paginationManager.getCurrentState();
+            const { page, itemsPerPage } = this.getCurrentPaginationState();
 
             // Get updated student list
             const updatedStudents = await this.getAll();
@@ -167,7 +281,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
 
             // if current page is greater that total page after deletion, go to previous page
             if (page > totalPages && page > 1) {
-              this.paginationManager.handlePageChange(page - 1, itemsPerPage);
+              this.handlePageChange(page - 1, itemsPerPage);
             }
 
             if (this.currentSearchQuery) {
@@ -215,7 +329,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    */
   private handleSort(students: Student[]): void {
     this.allStudents = students;
-    this.paginationManager.updateData(this.allStudents);
+    this.updatePaginationData(this.allStudents);
   }
 
   /**
@@ -227,7 +341,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
     this.allStudents = students;
 
     // Update pagination with the new dataset (this will trigger UI update)
-    this.paginationManager.updateData(this.allStudents);
+    this.updatePaginationData(this.allStudents);
   }
 
   /**
@@ -239,17 +353,14 @@ export class StudentController extends AbstractController<Student, BaseService> 
       // Get and update all students
       this.allStudents = await this.getAll();
 
-      // Update sort manager's data source
-      this.sortManager.updateDataSource(this.allStudents);
-
       // Apply current sort
-      const sortedStudents = this.sortManager.sortStudents(this.allStudents);
+      const sortedStudents = this.sortStudents(this.allStudents);
 
       // Update pagination with new dataset
-      this.paginationManager.updateData(sortedStudents);
+      this.updatePaginationData(sortedStudents);
 
       // Update sort UI
-      this.sortDropdownHandler.updateSortUI(this.sortManager.getCurrentSort());
+      this.sortDropdownHandler.updateSortUI(this.getCurrentSort());
     } catch (error) {
       this.handleError(error);
     }
