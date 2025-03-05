@@ -37,6 +37,7 @@ class ApiDataService extends BaseService<IStudent> {
   protected async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       throw response;
+      throw response;
     }
 
     return await response.json();
@@ -51,6 +52,7 @@ class ApiDataService extends BaseService<IStudent> {
       const response = await fetch(this.baseUrl);
       return this.handleResponse<IStudent[]>(response);
     } catch (error) {
+      throw this.handleError(error, ERROR_MESSAGES.FETCH_STUDENTS_ERROR);
       throw this.handleError(error, ERROR_MESSAGES.FETCH_STUDENTS_ERROR);
     }
   }
@@ -92,6 +94,7 @@ class ApiDataService extends BaseService<IStudent> {
     } catch (error) {
       console.error('Error creating student:', error);
       throw this.handleError(error, ERROR_MESSAGES.CREATE_STUDENT_ERROR);
+      throw this.handleError(error, ERROR_MESSAGES.CREATE_STUDENT_ERROR);
     }
   }
 
@@ -112,6 +115,7 @@ class ApiDataService extends BaseService<IStudent> {
       return this.handleResponse<IStudent>(response);
     } catch (error) {
       throw this.handleError(error, ERROR_MESSAGES.UPDATE_STUDENT_ERROR);
+      throw this.handleError(error, ERROR_MESSAGES.UPDATE_STUDENT_ERROR);
     }
   }
 
@@ -129,6 +133,7 @@ class ApiDataService extends BaseService<IStudent> {
         throw new Error(`Error! Status: ${response.status}`);
       }
     } catch (error) {
+      throw this.handleError(error, ERROR_MESSAGES.DELETE_STUDENT_ERROR);
       throw this.handleError(error, ERROR_MESSAGES.DELETE_STUDENT_ERROR);
     }
   }
