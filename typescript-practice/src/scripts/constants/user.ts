@@ -1,6 +1,6 @@
-import { User } from '../interfaces/user';
+import { IUser } from '../interfaces/user';
 
-export const DUMMY_USERS: User[] = [
+export const DUMMY_USERS: IUser[] = [
   { email: 'user@example.com', password: 'password123' },
   { email: 'admin@example.com', password: 'admin123' },
   { email: 'test@example.com', password: 'test123' },

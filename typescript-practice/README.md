@@ -30,8 +30,6 @@ The project showcases practical applications of TypeScript while delivering esse
 
 - JSON SERVER
 
-- LOCAL STORAGE
-
 ## Target
 
 <b>Understanding TypeScript:<b>
@@ -41,10 +39,6 @@ The project showcases practical applications of TypeScript while delivering esse
 <b>Syntax Mastery:<b>
 
 - Ensure participants grasp TypeScript's syntax, including variables, data types, functions, classes, interfaces, and enums.
-
-<b>Integration:<b>
-
-- Show how TypeScript integrates with libraries and frameworks like React or Angular or any related to TypeScript.
 
 <b>Configuration:<b>
 
@@ -68,13 +62,13 @@ The project showcases practical applications of TypeScript while delivering esse
 
 - Extensions: editorconfig, Pixel Perfect, Live Server, Prettier, ESlint
 
-## Test environments
+## Tested environments
 
 - Chrome version [133.0.6943.127], version [134.0.6998.33]
 
 - Firefox version [135.0.1], version [134.0.2]
 
-- Safari verion [17.5], version [18.3]
+- Safari version [17.5], version [18.3]
 
 ## Folder's structure
 
@@ -103,6 +97,7 @@ The project showcases practical applications of TypeScript while delivering esse
         |- app.js
         |- index.js
     |- index.html
+    |- login-page.html
 |- .editorconfig
 |- .eslintignore
 |- .eslintrc.json
@@ -123,7 +118,6 @@ The project showcases practical applications of TypeScript while delivering esse
 | cd typescript-practice                                                    | Move to folder                   |
 | npm install                                                               | Install dependencies             |
 | npm run dev                                                               | Run the parcel bundler           |
-    
 
 <b>Notes:<b>
 

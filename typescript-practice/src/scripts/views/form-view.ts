@@ -1,7 +1,10 @@
 import { formatDate, parseDate } from '../helpers/date-formatter';
-import Student from '../interfaces/student';
+import IStudent from '../interfaces/student';
 import { studentFormTemplate } from '../templates/student-form';
 import { Validator } from '../helpers/form-validation';
+import { ToastHandler } from '../helpers/toast-handler';
+import { CloudinaryUploadService } from '../services/image-upload';
+import { generateEnrollmentNumber } from '../helpers/enroll-number-generator';
 // @ts-expect-error
 import defaultAvatar from '../../assets/images/user-images/user-profile.png';
 
@@ -30,9 +33,9 @@ export class StudentFormView {
    * @param {() => Promise<Student[]>} getStudents - optional callback to fetch students for validation
    */
   constructor(
-    private onSave: (studentData: Partial<Student>) => void,
+    private onSave: (studentData: Partial<IStudent>) => void,
     private onCancel: () => void,
-    private getStudents?: () => Promise<Student[]>,
+    private getStudents?: () => Promise<IStudent[]>,
   ) {
     this.formContainer = document.createElement('div');
     this.formContainer.className = 'popup-container';
@@ -53,13 +56,15 @@ export class StudentFormView {
     this.formErrorElements = {};
     this.renderForm();
     this.show();
+
+    this.getEnrollmentNumber();
   }
 
   /**
    * Display edit student form with existing student data
    * @param {Student} student - student data to populate edit form
    */
-  showEditForm(student: Student): void {
+  showEditForm(student: IStudent): void {
     this.isEditMode = true;
     this.currentStudentId = student.id ?? null;
     this.formErrorElements = {};
@@ -77,7 +82,9 @@ export class StudentFormView {
 
     // Display new errors
     Object.entries(errors).forEach(([field, message]) => {
-      this.updateSingleFieldError(field, message);
+      if (field !== 'enrollNum') {
+        this.updateSingleFieldError(field, message);
+      }
     });
 
     // Update submit button state
@@ -107,7 +114,7 @@ export class StudentFormView {
    * @param {Student} student - optional student data for editing
    * @description renders the form with appropriate content to tailor the needs of adding or editing student
    */
-  private renderForm(student?: Student): void {
+  private renderForm(student?: IStudent): void {
     const formTitle = this.isEditMode ? 'Edit Student' : 'Add New Student';
     const submitButtonText = this.isEditMode ? 'Update Student' : 'Add Student';
 
@@ -126,6 +133,34 @@ export class StudentFormView {
     this.populateFormFields(student);
     this.attachFormEventListeners();
     this.attachValidationListeners();
+
+    const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
+    if (enrollInput) {
+      enrollInput.disabled = true;
+      enrollInput.classList.add('disabled-input');
+    }
+  }
+
+  /**
+   * Generate a unique enrollment number
+   */
+  private async getEnrollmentNumber(): Promise<void> {
+    const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
+    if (!enrollInput) return;
+
+    try {
+      const students = await this.getAllStudentsAsync();
+
+      const enrollNum = generateEnrollmentNumber(students);
+
+      // Set the value of the input
+      enrollInput.value = enrollNum;
+
+      // Clear any existing error for enrollment number
+      this.clearFieldError('enrollNum');
+    } catch (error) {
+      console.error('Failed to generate enrollment number:', error);
+    }
   }
 
   /**
@@ -145,7 +180,7 @@ export class StudentFormView {
    * Populate form fields with student data if provided
    * @param {Student} student - optional student data
    */
-  private populateFormFields(student?: Student): void {
+  private populateFormFields(student?: IStudent): void {
     if (!student) return;
 
     const nameInput = this.formContainer.querySelector('#name') as HTMLInputElement;
@@ -243,24 +278,53 @@ export class StudentFormView {
   private attachImageUploadListeners(): void {
     const uploadBtn = this.formContainer.querySelector('.upload-btn');
     const fileInput = this.formContainer.querySelector('#avatarUpload') as HTMLInputElement;
+    const avatarImg = this.formContainer.querySelector('.profile-placeholder img');
+    const uploadStatus = this.formContainer.querySelector('.upload-status');
 
     uploadBtn?.addEventListener('click', () => {
       fileInput?.click();
     });
 
-    fileInput?.addEventListener('change', (e) => {
+    fileInput?.addEventListener('change', async (e) => {
       const target = e.target as HTMLInputElement;
       if (target.files && target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          const avatarImg = this.formContainer.querySelector('.profile-placeholder img');
+        try {
+          // Show loading state
           if (avatarImg) {
-            avatarImg.setAttribute('src', result);
+            avatarImg.classList.add('loading');
+            uploadStatus?.classList.remove('hidden');
+          }
+
+          // Upload to Cloudinary
+          const uploadedImageUrl = await CloudinaryUploadService.uploadAvatar(target.files[0]);
+
+          if (avatarImg) {
+            // Set the image preview to the uploaded image
+            avatarImg.setAttribute('src', uploadedImageUrl);
             avatarImg.setAttribute('class', 'student-avatar');
           }
-        };
-        reader.readAsDataURL(target.files[0]);
+        } catch (error) {
+          // Handle upload error
+          console.error('Avatar upload failed:', error);
+
+          // Show error message
+          if (uploadStatus) {
+            uploadStatus.textContent = error instanceof Error ? error.message : 'Upload failed';
+            uploadStatus.classList.add('error');
+          }
+
+          // Show error toast
+          ToastHandler.show(
+            'error',
+            'Upload Failed',
+            error instanceof Error ? error.message : 'Could not upload avatar',
+          );
+        } finally {
+          // Remove loading indicator
+          if (avatarImg) {
+            avatarImg.classList.remove('loading');
+          }
+        }
       }
     });
   }
@@ -281,13 +345,13 @@ export class StudentFormView {
    * Collects and format form input values
    * @return {Partial<Student>} collect form data as a partial student object
    */
-  private getFormData(): Partial<Student> {
+  private getFormData(): Partial<IStudent> {
+    const avatarImg = this.formContainer.querySelector('.student-avatar') as HTMLImageElement;
     const nameInput = this.formContainer.querySelector('#name') as HTMLInputElement;
     const emailInput = this.formContainer.querySelector('#email') as HTMLInputElement;
     const phoneInput = this.formContainer.querySelector('#phone') as HTMLInputElement;
     const enrollInput = this.formContainer.querySelector('#enroll') as HTMLInputElement;
     const admissionInput = this.formContainer.querySelector('#admission') as HTMLInputElement;
-    const avatarImg = this.formContainer.querySelector('.student-avatar') as HTMLImageElement;
 
     // Format the date for display
     let formattedDate = '';
@@ -296,13 +360,13 @@ export class StudentFormView {
       formattedDate = formatDate(date);
     }
 
-    const studentData: Partial<Student> = {
+    const studentData: Partial<IStudent> = {
       name: nameInput.value,
       email: emailInput.value,
       phoneNum: phoneInput.value,
       enrollNum: enrollInput.value,
       dateAdmission: formattedDate,
-      avatar: avatarImg?.src || `${defaultAvatar}'`,
+      avatar: avatarImg?.src || `${defaultAvatar}`,
     };
 
     if (this.currentStudentId) {
@@ -392,7 +456,6 @@ export class StudentFormView {
           name: 'name',
           email: 'email',
           phone: 'phoneNum',
-          enroll: 'enrollNum',
           admission: 'dateAdmission',
         };
 
@@ -420,7 +483,6 @@ export class StudentFormView {
       name: 'name',
       email: 'email',
       phone: 'phoneNum',
-      enroll: 'enrollNum',
       admission: 'dateAdmission',
     };
 
@@ -428,8 +490,8 @@ export class StudentFormView {
     if (!field) return;
 
     // Create partial student object with just this field
-    const partialStudent: Partial<Student> = {};
-    partialStudent[field as keyof Student] = value;
+    const partialStudent: Partial<IStudent> = {};
+    partialStudent[field as keyof IStudent] = value;
 
     // Add the current student ID if in edit mode
     if (this.isEditMode && this.currentStudentId) {
@@ -437,7 +499,7 @@ export class StudentFormView {
     }
 
     // For email and enrollment, check for duplicates
-    if (field === 'email' || field === 'enrollNum') {
+    if (field === 'email') {
       // Get all students asynchronously and perform validation
       this.checkDuplicateField(field, value, partialStudent);
       return;
@@ -465,7 +527,7 @@ export class StudentFormView {
   private checkDuplicateField(
     field: string,
     value: string,
-    partialStudent: Partial<Student>,
+    partialStudent: Partial<IStudent>,
   ): void {
     this.getAllStudentsAsync().then((allStudents) => {
       const { errors } = Validator.validateForm(partialStudent, allStudents);
@@ -484,8 +546,8 @@ export class StudentFormView {
    * Get all students for validation
    * @return {Promise<Student[]>} promise that resolves to array of students
    */
-  private getAllStudentsAsync(): Promise<Student[]> {
-    return new Promise<Student[]>((resolve) => {
+  private getAllStudentsAsync(): Promise<IStudent[]> {
+    return new Promise<IStudent[]>((resolve) => {
       if (this.getStudents) {
         this.getStudents()
           .then((students) => {
@@ -537,6 +599,7 @@ export class StudentFormView {
    * @param {string} errorMessage - error message to display
    */
   private updateSingleFieldError(field: string, errorMessage: string): void {
+    if (field === 'enrollNum') return;
     const errorEl = this.formErrorElements[field];
     if (errorEl) {
       errorEl.textContent = errorMessage;

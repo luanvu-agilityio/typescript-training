@@ -1,4 +1,4 @@
-import ToastOptions from '../interfaces/toast-options';
+import IToastOptions from '../interfaces/toast-options';
 import { getToastHTML, getActionButtonsHTML, getProgressBarHTML } from '../templates/toast';
 import { ICON } from '../constants/toast-icon-src';
 type ToastType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
@@ -10,7 +10,6 @@ type ToastType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
 export class ToastHandler {
   private static readonly DEFAULT_DURATION = 3000;
   private static readonly ANIMATION_DURATION = 500;
-
   private static readonly ICON = ICON;
 
   /**
@@ -44,7 +43,7 @@ export class ToastHandler {
    * @param options - options for the toast
    * @return the created toast element
    */
-  private static createToastElement(options: ToastOptions): HTMLDivElement {
+  private static createToastElement(options: IToastOptions): HTMLDivElement {
     const toast = document.createElement('div');
 
     if (options.type === 'confirm') {
@@ -120,7 +119,7 @@ export class ToastHandler {
    */
   private static setupEventListeners(
     toast: HTMLDivElement,
-    options: ToastOptions,
+    options: IToastOptions,
     duration: number,
     isConfirmation: boolean = false,
   ): void {
@@ -215,7 +214,7 @@ export class ToastHandler {
    * @param options - options for the toast
    * @param isConfirmation - whether this is a confirmation dialog
    */
-  private static createToast(options: ToastOptions, isConfirmation: boolean = false): void {
+  private static createToast(options: IToastOptions, isConfirmation: boolean = false): void {
     const duration = options.duration ?? this.DEFAULT_DURATION;
     const container = this.getToastContainer(isConfirmation);
     const toast = this.createToastElement(options);

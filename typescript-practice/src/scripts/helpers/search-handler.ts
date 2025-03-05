@@ -25,7 +25,6 @@ export class StudentSearch {
     this.searchInput = document.querySelector(searchSelector) as HTMLInputElement;
     this.eventDelay = eventDelay;
     if (!this.searchInput) {
-      console.error('Search input element not found');
       return;
     }
     this.init();

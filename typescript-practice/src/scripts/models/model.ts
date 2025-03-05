@@ -1,7 +1,7 @@
-import Student from '../interfaces/student';
+import IStudent from '../interfaces/student';
 import { generateUUID } from '../helpers/uuid-generator';
 
-export default class StudentModel implements Student {
+export default class StudentModel implements IStudent {
   public readonly avatar: string;
   public readonly name: string;
   public readonly email: string;
@@ -10,7 +10,7 @@ export default class StudentModel implements Student {
   public readonly dateAdmission: string;
   public readonly id: string;
 
-  constructor(studentData: Partial<Student>) {
+  constructor(studentData: Partial<IStudent>) {
     this.avatar = studentData.avatar || './assets/images/user-images/user-profile.png';
     this.name = studentData.name || '';
     this.email = studentData.email || '';

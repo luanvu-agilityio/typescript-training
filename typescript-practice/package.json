@@ -11,7 +11,8 @@
     "start": "parcel",
     "build": "parcel build ./src/login-page.html",
     "server": "json-server --watch src/database/db.json",
-    "dev": "concurrently \"npm run start\" \"npm run server\""
+    "dev": "concurrently \"npm run start\" \"npm run server\"",
+    "update-avatars": "ts-node src/scripts/helpers/update-avatar-paths.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,9 +20,10 @@
   "description": "",
   "devDependencies": {
     "@parcel/resolver-glob": "^2.13.3",
-    "@types/node": "^22.13.5",
+    "@types/node": "^22.13.9",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
+    "buffer": "^6.0.3",
     "concurrently": "^9.1.2",
     "eslint": "^8.57.1",
     "eslint-config-airbnb": "^19.0.4",
@@ -31,9 +33,12 @@
     "eslint-plugin-prettier": "^5.2.3",
     "parcel": "^2.13.3",
     "prettier": "^3.5.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "axios": "^1.8.1",
+    "cloudinary": "^2.5.1",
     "json-server": "^0.17.4",
     "parcel-plugin-static-files-copy": "^2.6.0"
   },

@@ -1,4 +1,4 @@
-import { SortConfig, SortField, SortOrder } from './student-sort';
+import { ISortConfig, SortField, SortOrder } from './student-sort';
 
 /**
  * SortDropdownHandler class manages the sorting dropdown functionality.
@@ -17,7 +17,7 @@ export class SortDropdownHandler {
    */
   constructor(
     private onSortChange: (field: SortField, order: SortOrder) => void,
-    private initialConfig: SortConfig = { field: 'name', order: 'asc' },
+    private initialConfig: ISortConfig = { field: 'name', order: 'asc' },
   ) {
     this.dropdownButton = document.getElementById('sortByButton') as HTMLElement;
     this.dropdownMenu = document.getElementById('sortDropdownMenu') as HTMLElement;
@@ -133,7 +133,7 @@ export class SortDropdownHandler {
    * Updates the UI to match the current sort configuration.
    * @param config - The current sort configuration.
    */
-  public updateSortUI(config: SortConfig): void {
+  public updateSortUI(config: ISortConfig): void {
     const { field, order } = config;
     const matchingItem = Array.from(this.dropdownItems).find(
       (item) =>

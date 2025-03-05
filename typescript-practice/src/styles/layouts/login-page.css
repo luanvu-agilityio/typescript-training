@@ -34,6 +34,7 @@ body {
   position: relative;
   padding-left: 4.5rem;
   margin-bottom: 3rem;
+
   font-size: var(--font-size-32);
   font-weight: var(--font-weight-bold);
   text-align: center;

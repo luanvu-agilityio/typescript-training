@@ -226,6 +226,12 @@
   position: relative;
 }
 
+.disabled-input {
+  background-color: var(--light-gray-color);
+  color: var(--black-color);
+  pointer-events: not-allowed;
+}
+
 @media (max-width: 576px) {
   .popup-container {
     width: 95%;

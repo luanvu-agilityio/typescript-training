@@ -1,10 +1,10 @@
-import ToastOptions from '../interfaces/toast-options';
+import IToastOptions from '../interfaces/toast-options';
 type ToastType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
 
 export const getToastHTML = (
-  options: ToastOptions,
+  options: IToastOptions,
   getToastIcon: (type: ToastType) => string,
-  getActionButtonsHTML: (options: ToastOptions) => string,
+  getActionButtonsHTML: (options: IToastOptions) => string,
   getProgressBarHTML: () => string,
 ): string => `
   <div class="toast__icon">
@@ -19,7 +19,7 @@ export const getToastHTML = (
   ${options.type !== 'confirm' ? getProgressBarHTML() : ''}
 `;
 
-export const getActionButtonsHTML = (options: ToastOptions): string =>
+export const getActionButtonsHTML = (options: IToastOptions): string =>
   options.type === 'confirm'
     ? `<div class="toast__actions">
       <button class="toast__button toast__button--primary" type="button">Confirm</button>

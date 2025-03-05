@@ -1,5 +1,5 @@
 type ToastType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
-export default interface ToastOptions {
+export default interface IToastOptions {
   type: ToastType;
   title: string;
   message: string;

@@ -21,9 +21,15 @@ export const studentFormTemplate = (
             ? `<img src="${student.avatar}" alt="Student avatar" class="student-avatar" />`
             : `<img src="${cameraIcon}" alt="camera" />`
         }
+        <div class="upload-status hidden" aria-live="polite"></div>
       </div>
       <button class="upload-btn">Upload Photo</button>
-      <input type="file" id="avatarUpload" accept="image/*" style="display: none;" />
+      <input 
+        type="file" 
+        id="avatarUpload" 
+        accept="image/jpeg,image/png,image/gif,image/webp" 
+        style="display: none;" 
+      />
     </div>
     <form id="studentForm">
       <div class="form-group">

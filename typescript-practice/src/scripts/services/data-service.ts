@@ -1,136 +1,32 @@
-import { StudentNotFoundError } from '../helpers/error';
-import Student from '../interfaces/student';
+import { BaseService } from './base-service';
+import IStudent from '../interfaces/student';
+import { ERROR_MESSAGES } from '../constants/request-error-message';
 
 /**
  * Interfaces for environment config
  */
 
-interface Environment {
+interface IEnvironment {
   localApiUrl: string;
   remoteApiUrl: string;
-  baseImageUrl: string;
 }
 
-const environment: Environment = {
+const environment: IEnvironment = {
   localApiUrl: 'http://localhost:3000',
   remoteApiUrl: 'https://crud-api-vuea.onrender.com',
-  baseImageUrl: 'https://typescript-training-jz30.onrender.com',
 };
-
-export abstract class BaseService {
-  abstract getAll(): Promise<Student[]>;
-  abstract getById(id: string): Promise<Student | undefined>;
-  abstract create(student: Student): Promise<Student>;
-  abstract update(student: Student): Promise<Student>;
-  abstract delete(id: string): Promise<void>;
-
-  // Common error handling or utility methods could be added here
-  protected handleError(error: unknown, operation: string): Error {
-    console.error(`Error during ${operation}:`, error);
-    return error instanceof Error
-      ? error
-      : new Error(`Unknown error during ${operation}: ${String(error)}`);
-  }
-}
-
-/**
- * LocalStorageService class implements BaseService to manage student data using localStorage
- */
-class LocalStorageService extends BaseService {
-  private readonly STORAGE_KEY = 'all students';
-  private baseImageUrl: string;
-
-  constructor(baseImageUrl: string) {
-    super();
-    this.baseImageUrl = baseImageUrl;
-  }
-
-  /**
-   * Retrieves all students from localStorage
-   * @returns a promise that resolves to an array of students
-   *
-   */
-  async getAll(): Promise<Student[]> {
-    try {
-      const studentJson = localStorage.getItem(this.STORAGE_KEY);
-      const students = studentJson ? JSON.parse(studentJson) : [];
-
-      return students;
-    } catch (error) {
-      throw this.handleError(error, 'retrieving students from local storage');
-    }
-  }
-
-  /**
-   * Retrieves a student by id from localStorage
-   * @param id - the id of student to retrieve
-   * @returns a promise that resolves to the student, or undefined if not found
-   */
-  async getById(id: string): Promise<Student | undefined> {
-    const students = await this.getAll();
-    const student = students.find((s) => s.id === id);
-    if (!student) {
-      throw this.handleError(new StudentNotFoundError(id), 'retrieving student by id');
-    }
-
-    return student;
-  }
-
-  /**
-   * Creates a new student and save it to localStorage
-   * @param student - the student to create
-   * @returns a promise that resolved to created student
-   */
-  async create(student: Student): Promise<Student> {
-    const students = await this.getAll();
-    students.push(student);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-
-    return student;
-  }
-
-  /**
-   * Update the existing student in localStorage
-   * @param student - the student to update
-   * @returns a premise that resolved to the updated student
-   */
-  async update(student: Student): Promise<Student> {
-    const students = await this.getAll();
-    const index = students.findIndex((s) => s.id === student.id);
-    if (index === -1) {
-      throw this.handleError(new StudentNotFoundError(student.id!), 'updating student');
-    }
-
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(students));
-
-    return student;
-  }
-
-  /**
-   * Deletes student by id from localStorage
-   * @param id = the id of student to delete
-   * @returns - a promise that resolved when the student is deleted
-   */
-  async delete(id: string): Promise<void> {
-    const students = await this.getAll();
-    const filteredStudents = students.filter((s) => s.id !== id);
-    if (filteredStudents.length === students.length) {
-      throw new StudentNotFoundError(id);
-    }
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredStudents));
-  }
-}
 
 /**
  * ApiDataService class implement BaseService to manage student using a remote API
  */
-class ApiDataService extends BaseService {
-  private readonly baseUrl: string;
-  private readonly baseImageUrl: string;
+class ApiDataService extends BaseService<IStudent> {
+  /**
+   * Constructor to initialize the base URL for the student endpoint
+   * @param baseUrl - The base URL for the student endpoint
+   */
+
   constructor(baseUrl: string) {
-    super();
-    this.baseUrl = `${baseUrl}/students`;
-    this.baseImageUrl = environment.baseImageUrl;
+    super(`${baseUrl}/students`);
   }
 
   /**
@@ -138,9 +34,9 @@ class ApiDataService extends BaseService {
    * @param response - the response from the API
    * @returns  a promise that resolves to the parse response date
    */
-  private async handleResponse<T>(response: Response): Promise<T> {
+  protected async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      throw this.handleError(new Error(`Error! Status: ${response.status}`), 'fetching data');
+      throw response;
     }
 
     return await response.json();
@@ -150,12 +46,12 @@ class ApiDataService extends BaseService {
    * Retrieves all students from api
    * @returns a promise that resolves to an array of student
    */
-  async getAll(): Promise<Student[]> {
+  async getAll(): Promise<IStudent[]> {
     try {
       const response = await fetch(this.baseUrl);
-      return this.handleResponse<Student[]>(response);
+      return this.handleResponse<IStudent[]>(response);
     } catch (error) {
-      throw this.handleError(error, 'fetching all students');
+      throw this.handleError(error, ERROR_MESSAGES.FETCH_STUDENTS_ERROR);
     }
   }
 
@@ -164,13 +60,13 @@ class ApiDataService extends BaseService {
    * @param id = the id of student  to retrieve
    * @returns a promise that resolves to the student, or undefined if notfound
    */
-  async getById(id: string): Promise<Student | undefined> {
+  async getById(id: string): Promise<IStudent | undefined> {
     try {
       const response = await fetch(`${this.baseUrl}/${id}`);
       if (response.status === 404) {
         return undefined;
       }
-      return this.handleResponse<Student>(response);
+      return this.handleResponse<IStudent>(response);
     } catch (error) {
       console.error(`Error fetching student ${id}:`, error);
       return undefined;
@@ -183,7 +79,7 @@ class ApiDataService extends BaseService {
    * @returns a promise that resolves to the created student
    *
    */
-  async create(student: Student): Promise<Student> {
+  async create(student: IStudent): Promise<IStudent> {
     try {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
@@ -192,10 +88,10 @@ class ApiDataService extends BaseService {
         },
         body: JSON.stringify(student),
       });
-      return this.handleResponse<Student>(response);
+      return this.handleResponse<IStudent>(response);
     } catch (error) {
       console.error('Error creating student:', error);
-      throw this.handleError(error, 'creating student');
+      throw this.handleError(error, ERROR_MESSAGES.CREATE_STUDENT_ERROR);
     }
   }
 
@@ -204,7 +100,7 @@ class ApiDataService extends BaseService {
    * @param student - the student to update
    * @returns a promise that resolves to the updated student
    */
-  async update(student: Student): Promise<Student> {
+  async update(student: IStudent): Promise<IStudent> {
     try {
       const response = await fetch(`${this.baseUrl}/${student.id}`, {
         method: 'PUT',
@@ -213,9 +109,9 @@ class ApiDataService extends BaseService {
         },
         body: JSON.stringify(student),
       });
-      return this.handleResponse<Student>(response);
+      return this.handleResponse<IStudent>(response);
     } catch (error) {
-      throw this.handleError(error, 'updating student');
+      throw this.handleError(error, ERROR_MESSAGES.UPDATE_STUDENT_ERROR);
     }
   }
 
@@ -233,7 +129,7 @@ class ApiDataService extends BaseService {
         throw new Error(`Error! Status: ${response.status}`);
       }
     } catch (error) {
-      throw this.handleError(error, 'deleting student');
+      throw this.handleError(error, ERROR_MESSAGES.DELETE_STUDENT_ERROR);
     }
   }
 }
@@ -248,13 +144,11 @@ export class DataServiceEnvironment {
    * @returns a promise that resolves to an instance of BaseService
    *
    */
-  static async create(): Promise<BaseService> {
+  static async create(): Promise<BaseService<IStudent>> {
     // Test if we are at local json server
     try {
       const response = await fetch(`${environment.localApiUrl}/students`);
       if (response.ok) {
-        console.log('Using local json server');
-
         return new ApiDataService(environment.localApiUrl);
       }
     } catch (error) {
@@ -265,15 +159,13 @@ export class DataServiceEnvironment {
     try {
       const response = await fetch(`${environment.remoteApiUrl}/students`);
       if (response.ok) {
-        console.log('Using remote Json server');
-
         return new ApiDataService(environment.remoteApiUrl);
       }
     } catch (error) {
       console.log('Remote json server is not available');
     }
 
-    // Only use this as fallback for API URL, not for image base URL
+    // fallback for API URL
     return new ApiDataService(environment.remoteApiUrl);
   }
 }
@@ -282,8 +174,8 @@ export class DataServiceEnvironment {
  * Get the singleton instance of BaseService
  * @returns a Promise that resolves to the singleton instance of BaseService
  */
-let dataServiceInstance: BaseService | null = null;
-export const getDataService = async (): Promise<BaseService> => {
+let dataServiceInstance: BaseService<IStudent> | null = null;
+export const getDataService = async (): Promise<BaseService<IStudent>> => {
   if (!dataServiceInstance) {
     dataServiceInstance = await DataServiceEnvironment.create();
   }

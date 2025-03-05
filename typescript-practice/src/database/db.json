@@ -1,7 +1,7 @@
 {
   "students": [
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740551405410%27",
+      "avatar": "/user-profile.7cade9d7.png?1741105322400%27",
       "name": "Luan Vu",
       "email": "luan.vu@asnet.com.vn",
       "phoneNum": "09090708231",
@@ -10,7 +10,7 @@
       "id": "f9fa1405-4432-4abd-b1fc-1bbf129d3869"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103248731%27",
       "name": "David A",
       "email": "david@gmail.com.vn",
       "phoneNum": "0807325450",
@@ -19,7 +19,7 @@
       "id": "e001a461-f496-45ce-a578-2dd6406ba1b0"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740551405410%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103324281%27",
       "name": "John Doe",
       "email": "john.doe@example.com",
       "phoneNum": "0701234567",
@@ -28,7 +28,7 @@
       "id": "12345678-1234-1234-1234-123456789012"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "https://res.cloudinary.com/ds82onf5q/image/upload/v1741142226/wf7q0zcnhfss5tiagik5.jpg",
       "name": "Bob Brown",
       "email": "bob.brown@example.com",
       "phoneNum": "1001234567",
@@ -37,16 +37,7 @@
       "id": "45678901-4567-4567-4567-456789012345"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740992128017%27",
-      "name": "alice",
-      "email": "test@example.com",
-      "phoneNum": "12345645678",
-      "enrollNum": "EN1235321",
-      "dateAdmission": "24-Feb, 2025",
-      "id": "6ae2eadd-eec9-4ec2-b64f-260d18a98dd6"
-    },
-    {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "https://res.cloudinary.com/ds82onf5q/image/upload/v1741144070/dfh4itqdkturgj3yqtwn.jpg",
       "name": "Alice Johnson",
       "email": "alice.johnson@example.com",
       "phoneNum": "0801234567",
@@ -55,7 +46,7 @@
       "id": "23456789-2345-2345-2345-234567890123"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103242470%27",
       "name": "Chris Green",
       "email": "chris.green@example.com",
       "phoneNum": "1101234567",
@@ -64,7 +55,7 @@
       "id": "56789012-5678-5678-5678-567890123456"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103254761%27",
       "name": "Emily White",
       "email": "emily.white@example.com",
       "phoneNum": "1201234567",
@@ -73,7 +64,7 @@
       "id": "67890123-6789-6789-6789-678901234567"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103261589%27",
       "name": "Frank Black",
       "email": "frank.black@example.com",
       "phoneNum": "1301234567",
@@ -82,7 +73,7 @@
       "id": "78901234-7890-7890-7890-789012345678"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103269524%27",
       "name": "Grace Blue",
       "email": "grace.blue@example.com",
       "phoneNum": "1401234567",
@@ -91,7 +82,7 @@
       "id": "89012345-8901-8901-8901-890123456789"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103276101%27",
       "name": "Henry Yellow",
       "email": "henry.yellow@example.com",
       "phoneNum": "1501234567",
@@ -100,7 +91,7 @@
       "id": "90123456-9012-9012-9012-901234567890"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103300711%27",
       "name": "Ivy Brown",
       "email": "ivy.brown@example.com",
       "phoneNum": "1601234567",
@@ -109,7 +100,7 @@
       "id": "01234567-0123-0123-0123-012345678901"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103307101%27",
       "name": "Jack Black",
       "email": "jack.black@example.com",
       "phoneNum": "1701234567",
@@ -118,7 +109,7 @@
       "id": "12345678-1234-1234-1234-123456789013"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103331118%27",
       "name": "Karen White",
       "email": "karen.white@example.com",
       "phoneNum": "1801234567",
@@ -127,7 +118,7 @@
       "id": "23456789-2345-2345-2345-234567890124"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1740544726210%27",
+      "avatar": "/user-profile.7cade9d7.png?1741103338459%27",
       "name": "Leo Green",
       "email": "leo.green@example.com",
       "phoneNum": "1901234567",
@@ -136,40 +127,13 @@
       "id": "34567890-3456-3456-3456-345678901235"
     },
     {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
-      "name": "alice a",
-      "email": "alicea@gmail.com",
-      "phoneNum": " 023303 513122",
-      "enrollNum": "EN3464545",
+      "avatar": "https://res.cloudinary.com/ds82onf5q/image/upload/v1741146585/ylmuhxicpfvk6nlszhhv.jpg",
+      "name": "Thien Nguyen",
+      "email": "thiennguyen@gmail.com",
+      "phoneNum": "0102 451 512",
+      "enrollNum": "UI0669470",
       "dateAdmission": "24-Feb, 2025",
-      "id": "27ca82ea-ec49-4303-94fc-70e2968bfea6"
-    },
-    {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
-      "name": "alice e",
-      "email": "alicee@gmail.com",
-      "phoneNum": "0213 613 00233",
-      "enrollNum": "EN9894632",
-      "dateAdmission": "26-Feb, 2025",
-      "id": "dd3404a4-1720-43d6-9ebc-4427759428df"
-    },
-    {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
-      "name": "alice t",
-      "email": "alicet@gmail.com",
-      "phoneNum": "131 46513 1321",
-      "enrollNum": "EN9512152",
-      "dateAdmission": "27-Feb, 2025",
-      "id": "b9bcbc12-b52d-4018-b852-b9422a946c3f"
-    },
-    {
-      "avatar": "http://localhost:1234/user-profile.7cade9d7.png?1741070039355'",
-      "name": "alicem",
-      "email": "alicem@gmail.com",
-      "phoneNum": "0213 203 516",
-      "enrollNum": "EN9643244",
-      "dateAdmission": "27-Feb, 2025",
-      "id": "ac3f659b-ea1d-4245-a08c-479f48931fc5"
+      "id": "ee78a57e-7c70-4dd0-bc25-534a5da607ee"
     }
   ]
 }

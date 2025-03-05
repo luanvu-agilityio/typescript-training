@@ -1,4 +1,4 @@
-import Student from '../interfaces/student';
+import IStudent from '../interfaces/student';
 import { ERROR_MESSAGES } from '../constants/form-validation-messages';
 
 /**
@@ -80,8 +80,8 @@ export class Validator {
    * @returns An object containing the validation result and any validation errors.
    */
   static validateForm(
-    student: Partial<Student>,
-    existingStudents: Student[] = [],
+    student: Partial<IStudent>,
+    existingStudents: IStudent[] = [],
   ): {
     isValid: boolean;
     errors: Record<string, string>;
@@ -116,10 +116,12 @@ export class Validator {
     }
 
     // Enrollment number validation
-    if (!this.validateRequired(student.enrollNum)) {
-      errors.enrollNum = ERROR_MESSAGES.REQUIRED.ENROLL_NUM;
-    } else if (!this.validateEnrollmentNumber(student.enrollNum)) {
-      errors.enrollNum = ERROR_MESSAGES.INVALID.ENROLL_NUM;
+    if (student.id) {
+      if (!this.validateRequired(student.enrollNum)) {
+        errors.enrollNum = ERROR_MESSAGES.REQUIRED.ENROLL_NUM;
+      } else if (!this.validateEnrollmentNumber(student.enrollNum)) {
+        errors.enrollNum = ERROR_MESSAGES.INVALID.ENROLL_NUM;
+      }
     }
 
     // Date of admission validation
@@ -137,7 +139,12 @@ export class Validator {
     }
 
     // Check for unique enrollment number
-    if (!errors.enrollNum && student.enrollNum && existingStudents.length > 0) {
+    if (
+      !errors.enrollNum &&
+      !errors.enrollNum &&
+      student.enrollNum &&
+      existingStudents.length > 0
+    ) {
       if (!this.validateUniqueEnrollmentNumber(student.enrollNum, existingStudents, student.id)) {
         errors.enrollNum = ERROR_MESSAGES.DUPLICATE.ENROLL_NUM;
       }
@@ -158,7 +165,7 @@ export class Validator {
    */
   static validateUniqueEmail(
     email: string,
-    existingStudents: Student[],
+    existingStudents: IStudent[],
     currentStudentId?: string,
   ): boolean {
     return !existingStudents.some(
@@ -175,7 +182,7 @@ export class Validator {
    */
   static validateUniqueEnrollmentNumber(
     enrollNum: string,
-    existingStudents: Student[],
+    existingStudents: IStudent[],
     currentStudentId?: string,
   ): boolean {
     return !existingStudents.some(

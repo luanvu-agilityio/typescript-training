@@ -1,22 +1,22 @@
-import Student from '../interfaces/student';
+import IStudent from '../interfaces/student';
 import StudentModel from '../models/model';
 import { SortDropdownHandler } from '../helpers/sort-dropdown-handler';
 import { StudentFormView } from '../views/form-view';
 import { StudentListView } from '../views/student-list-view';
 import { ToastHandler } from '../helpers/toast-handler';
 import { Validator } from '../helpers/form-validation';
-import { SortField, SortOrder, StudentSort, SortConfig } from '../helpers/student-sort';
+import { SortField, SortOrder, StudentSort, ISortConfig } from '../helpers/student-sort';
 import { Pagination } from '../helpers/pagination';
-import { BaseService } from '../services/data-service';
-import { StorageError, StudentNotFoundError, ValidationError } from '../helpers/error';
+import { BaseService } from '../services/base-service';
+import { StorageError, StudentNotFoundError, ValidationError } from '../helpers/error-type';
 import { AbstractController } from './abstract-controller';
 
 /**
  * StudentController class manages student data and interactions between the model, view, and storage.
  * Extends AbstractController to inherit common functionality.
  */
-export class StudentController extends AbstractController<Student, BaseService> {
-  private allStudents: Student[] = [];
+export class StudentController extends AbstractController<IStudent, BaseService<IStudent>> {
+  private allStudents: IStudent[] = [];
   // View components
   private readonly listView: StudentListView;
   private readonly formView: StudentFormView;
@@ -27,7 +27,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
   private pagination: Pagination;
 
   // Sort properties
-  private currentSort: SortConfig = {
+  private currentSort: ISortConfig = {
     field: 'name' as SortField,
     order: 'asc' as SortOrder,
   };
@@ -35,7 +35,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
   private sortDropdownHandler: SortDropdownHandler;
 
   constructor(
-    dataService: BaseService,
+    dataService: BaseService<IStudent>,
     handlers: {
       handleDelete: (id: string) => void;
       handleEdit: (id: string) => void;
@@ -119,7 +119,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * @param query - The search query.
    * @param allStudents - The array of all students.
    */
-  private searchStudents(query: string, allStudents: Student[]): void {
+  private searchStudents(query: string, allStudents: IStudent[]): void {
     if (!query || query.trim() === '') {
       this.handleSearch(allStudents);
       return;
@@ -138,7 +138,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * @param query - The search query.
    * @returns True if the student matches the query, otherwise false.
    */
-  private matchesSearch(student: Student, query: string): boolean {
+  private matchesSearch(student: IStudent, query: string): boolean {
     return (
       (student.name?.toLowerCase().includes(query) ?? false) ||
       (student.email?.toLowerCase().includes(query) ?? false) ||
@@ -185,7 +185,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * Updates the dataset and recalculates pagination
    * @param students - the array of students to update
    */
-  private updatePaginationData(students: Student[]): void {
+  private updatePaginationData(students: IStudent[]): void {
     this.allStudents = students;
     this.pagination.updateTotalItems(students.length);
     this.updateDisplayedStudents();
@@ -195,7 +195,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * Gets the current sort configuration.
    * @returns The current sort configuration.
    */
-  public getCurrentSort(): SortConfig {
+  public getCurrentSort(): ISortConfig {
     return { ...this.currentSort };
   }
 
@@ -229,7 +229,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * @param students - The array of students to sort.
    * @returns The sorted array of students.
    */
-  private sortStudents(students: Student[]): Student[] {
+  private sortStudents(students: IStudent[]): IStudent[] {
     return StudentSort.sortStudents(students, this.currentSort);
   }
 
@@ -328,7 +328,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * Handles sort event.
    * @param students - The sorted array of students.
    */
-  private handleSort(students: Student[]): void {
+  private handleSort(students: IStudent[]): void {
     this.allStudents = students;
     this.updatePaginationData(this.allStudents);
   }
@@ -337,10 +337,9 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * Handles search event.
    * @param students - The filtered array of students.
    */
-  private handleSearch(students: Student[]): void {
+  private handleSearch(students: IStudent[]): void {
     // Update the allStudents array with the filtered results
     this.allStudents = students;
-    const { itemsPerPage } = this.getCurrentPaginationState();
 
     this.handlePageChange(1, this.getCurrentPaginationState().itemsPerPage);
 
@@ -374,7 +373,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * Handles the save action for adding or updating a student.
    * @param studentData - The data of the student to save.
    */
-  private async handleSave(studentData: Partial<Student>): Promise<void> {
+  private async handleSave(studentData: Partial<IStudent>): Promise<void> {
     try {
       const allStudents = await this.executeOperation(
         async () => await this.getAll(),
@@ -421,7 +420,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * Creates a new student and adds it to the storage.
    * @param studentData - The data of the new student.
    */
-  private async createNewStudent(studentData: Partial<Student>): Promise<void> {
+  private async createNewStudent(studentData: Partial<IStudent>): Promise<void> {
     try {
       const newStudent = new StudentModel(studentData);
       await this.create(newStudent);
@@ -442,7 +441,7 @@ export class StudentController extends AbstractController<Student, BaseService> 
    * Updates an existing student in the storage.
    * @param studentData - The data of the student to update.
    */
-  private async updateExistingStudent(studentData: Partial<Student>): Promise<void> {
+  private async updateExistingStudent(studentData: Partial<IStudent>): Promise<void> {
     try {
       if (!studentData.id) {
         throw new Error('Student ID is required for update');

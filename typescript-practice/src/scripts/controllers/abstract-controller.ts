@@ -1,13 +1,14 @@
 import { LoadingSpinner } from '../helpers/loading-spinner';
 import { ToastHandler } from '../helpers/toast-handler';
-import { StorageError, StudentNotFoundError, ValidationError } from '../helpers/error';
-import { BaseService } from '../services/data-service';
+import { StorageError, StudentNotFoundError, ValidationError } from '../helpers/error-type';
+import { BaseService } from '../services/base-service';
+import IStudent from '../interfaces/student';
 
 /**
  * AbstractController provides a base for all controller classes with common functionality
  * for error handling, loading state management, and core operations.
  */
-export abstract class AbstractController<ModelType, ServiceType extends BaseService> {
+export abstract class AbstractController<ModelType, ServiceType extends BaseService<IStudent>> {
   protected loadingSpinner: LoadingSpinner;
   protected readonly dataService: ServiceType;
 

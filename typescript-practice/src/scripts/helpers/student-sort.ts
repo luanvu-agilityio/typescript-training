@@ -1,9 +1,9 @@
-import Student from '../interfaces/student';
+import IStudent from '../interfaces/student';
 
 export type SortField = 'name' | 'email' | 'phoneNum' | 'enrollNum' | 'dateAdmission';
 export type SortOrder = 'asc' | 'desc';
 
-export interface SortConfig {
+export interface ISortConfig {
   field: SortField;
   order: SortOrder;
 }
@@ -15,7 +15,7 @@ export class StudentSort {
    * @param order - Sort order (asc or desc)
    * @returns Sorted array of students
    */
-  static sortStudents(students: Student[], config: SortConfig): Student[] {
+  static sortStudents(students: IStudent[], config: ISortConfig): IStudent[] {
     const { field, order } = config;
 
     return [...students].sort((a, b) => {

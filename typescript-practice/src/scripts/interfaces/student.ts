@@ -1,4 +1,4 @@
-export default interface Student {
+export default interface IStudent {
   avatar: string;
   name: string;
   email: string;

@@ -1,7 +1,7 @@
 import Student from '../interfaces/student';
 import { studentRowTemplate } from '../templates/student-list';
 
-import { SortConfig, SortField, SortOrder } from '../helpers/student-sort';
+import { SortField } from '../helpers/student-sort';
 
 /**
  * Responsible for rendering the list of students and handling user interaction with the list

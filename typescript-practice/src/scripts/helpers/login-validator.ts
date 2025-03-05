@@ -1,5 +1,4 @@
 import { DUMMY_USERS, ERROR_MESSAGES } from '../constants/user';
-import { User } from '../interfaces/user';
 
 /**
  * Function to validate email format

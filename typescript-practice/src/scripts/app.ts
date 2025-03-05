@@ -48,7 +48,6 @@ export default class App {
       await this.initializeFeatures();
     } catch (error) {
       console.error('Failed to initialize application:', error);
-      // Could add error handling UI here
     }
   }
 
